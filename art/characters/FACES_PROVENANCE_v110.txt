@@ -1,0 +1,1 @@
+faces16_source.png: original AI-generated 4x4 grid of sixteen fictional portraits created for this project. Not photographs and not ripped game assets. No exclusive ownership, verified copyright or CC0 claim is made for the generated portraits. faces16.png is the resized runtime atlas; src/faces16.h is its full mip chain. Existing asset terms continue to apply to other files.

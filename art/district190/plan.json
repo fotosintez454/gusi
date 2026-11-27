@@ -1,0 +1,63 @@
+{
+  "version": "0.19.0",
+  "units": "legacy XZ multiplied by WORLD_XZ=1.35 in rendering/physics",
+  "sections": [
+    {
+      "x": -82,
+      "z": -18,
+      "floors": 9,
+      "paired_with": 2
+    },
+    {
+      "x": 82,
+      "z": 18,
+      "floors": 12,
+      "paired_with": 3
+    },
+    {
+      "x": -66,
+      "z": -18,
+      "floors": 9,
+      "paired_with": 0
+    },
+    {
+      "x": 66,
+      "z": 18,
+      "floors": 12,
+      "paired_with": 1
+    }
+  ],
+  "apartments": 84,
+  "new_residents": 40,
+  "old_residents": 48,
+  "civic": [
+    {
+      "name": "Аптека",
+      "x": -24,
+      "z": -60
+    },
+    {
+      "name": "Почта",
+      "x": 0,
+      "z": -60
+    },
+    {
+      "name": "Парикмахерская",
+      "x": 24,
+      "z": -60
+    }
+  ],
+  "office": [
+    -48,
+    -35
+  ],
+  "animal_counts": {
+    "dogs": 8,
+    "pigeons": 16,
+    "crows": 4,
+    "cats": 4
+  },
+  "track_capacity": 8192,
+  "material_resolution": 512,
+  "notes": "Exact collision and geometric definitions are in src/district180.h, src/life190.h and src/district190_draw.h."
+}

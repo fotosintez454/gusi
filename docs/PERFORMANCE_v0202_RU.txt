@@ -1,0 +1,15 @@
+Замеры CPU-времени программного рендера, 800×450, один и тот же мир/камера/настройки. Три серии по 8 кадров после прогрева. Это не FPS на вашем Windows-компьютере и не замер OpenGL.
+
+night_windows: медиана 78.907 → 47.021 мс/кадр; CPU-времени меньше на 40.4%.
+winter_track_history: медиана 124.782 → 64.276 мс/кадр; CPU-времени меньше на 48.5%.
+river_summer: медиана 17.489 → 12.364 мс/кадр; CPU-времени меньше на 29.3%.
+
+Исходные серии:
+BENCH202 night_windows resolution=800x450 ms_per_frame=78.907,76.981,81.023 draws=102623
+BENCH202 winter_track_history resolution=800x450 ms_per_frame=125.436,121.927,124.782 draws=127946
+BENCH202 river_summer resolution=800x450 ms_per_frame=17.489,17.607,16.992 draws=10001
+BENCH202 night_windows resolution=800x450 ms_per_frame=53.416,47.021,46.790 draws=35211
+BENCH202 winter_track_history resolution=800x450 ms_per_frame=64.276,64.549,64.262 draws=69077
+BENCH202 river_summer resolution=800x450 ms_per_frame=12.380,12.342,12.364 draws=6121
+
+Микротест: tools/bench_v202.c. Изменения счётчика лифта и кровельного перехода после замера не затрагивают основной путь оптимизации.

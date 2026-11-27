@@ -1,0 +1,67 @@
+{
+  "version": "0.18.0",
+  "physical_xz_multiplier": 1.35,
+  "highrises": [
+    {
+      "origin": [
+        -82,
+        -18
+      ],
+      "floors": 9,
+      "apartments_per_floor": 2,
+      "lift": true
+    },
+    {
+      "origin": [
+        82,
+        18
+      ],
+      "floors": 12,
+      "apartments_per_floor": 2,
+      "lift": true
+    },
+    {
+      "origin": [
+        -160,
+        -88
+      ],
+      "floors": 9,
+      "apartments_per_floor": 2,
+      "lift": true
+    },
+    {
+      "origin": [
+        160,
+        -88
+      ],
+      "floors": 12,
+      "apartments_per_floor": 2,
+      "lift": true
+    }
+  ],
+  "outer_roads": {
+    "x": [
+      -101,
+      101
+    ],
+    "z": [
+      -108,
+      108
+    ]
+  },
+  "playgrounds": [
+    {
+      "centre": [
+        -13,
+        -13
+      ]
+    },
+    {
+      "centre": [
+        20,
+        13
+      ]
+    }
+  ],
+  "scope": "architecture build; not full specification completion"
+}

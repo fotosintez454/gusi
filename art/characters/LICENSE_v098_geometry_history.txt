@@ -1,0 +1,1 @@
+Original OKNO v099 civilian geometry, skeleton, atlas and generator output: CC0 1.0. No STALKER model, texture or animation was copied. No claim of STALKER bone-name/retargeting compatibility.

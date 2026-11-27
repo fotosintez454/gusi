@@ -1,0 +1,45 @@
+#define HEADLESS
+#define main original_main
+#include "../src/main.c"
+#undef main
+static int checks202,fail202;
+#define Q202(c,m) do{checks202++;if(!(c)){fail202++;printf("FAIL202 %s at %d (x=%.2f y=%.2f z=%.2f)\n",m,__LINE__,g.x,g.playerY,g.z);}}while(0)
+static void away202(void){for(int i=0;i<NN;i++){PERSON(i).x=180;PERSON(i).z=130;}local_init190();for(int i=0;i<LOCAL190;i++){g.locals190[i].x=180;g.locals190[i].z=130;g.locals190[i].y=39;}physicsActor150=-1;navStatic150=0;}
+static void eye202(float x,float z,float y,float tx,float ty,float tz){g.x=x;g.z=z;g.playerY=y;screen=0;aim_at(tx,ty,tz);interaction();}
+int main(void){savepath="build/test202.save";eventpath="build/test202.csv";audio_init();nextWorldSeed=140;test_reset();away202();props_init150();
+ // Every authored bridge uses exactly the same footprint as its physical support.
+ for(int season=0;season<4;season++){g.season=season;g.winter=season==0;for(int n=-1;n<=1;n++){float x=n*90.f,z=river_z(x);Q202(bridge_at202(x,z)&&!river_water(x,z)&&ab(terrain_height141(x,z)-.36f)<.001f,"visible bridge supports the player in every season");Q202(!bridge_at202(x+2.95f,z)&&river_water(x+2.95f,z),"no invisible bridge lip beyond the 5.8m deck");Q202(!bridge_at202(x,z+4.80f),"no invisible support beyond the wooden deck end");g.x=x;g.z=z-4.5f;g.playerY=.36f;for(int k=0;k<90;k++)panel_step(x,z-4.5f+k*.1f);Q202(ab(g.playerY-.36f)<.001f,"bridge floor remains stable across the channel");}}
+ // Longstanding 3cm/10cm roof-edge holes, the panel indoor solver, and headhouse caps.
+ for(int h=0;h<NH;h++){g.playerY=15.16f;g.x=hx[h]-3;g.z=hz[h]+4.60f;g.fallVelocity=0;move(6,0);Q202(g.x>hx[h]+2.9f&&ab(g.playerY-15.16f)<.001f&&!g.fallVelocity,"walk the drawn residential roof rear edge without falling");
+ g.x=hx[h]+6.6f;g.z=hz[h]-3;g.playerY=18.04f;Q202(panel_step(g.x+.2f,g.z)&&ab(g.playerY-18.04f)<.001f,"residential roof-access cap has its real top height");}
+ for(int h=0;h<NH;h++){g.x=hx[h]+6;g.z=hz[h]-2.8f;g.playerY=15.16f;g.fallVelocity=0;move(0,1.2f);Q202(g.z>hz[h]-1.7f&&!g.fallVelocity&&g.playerY<15.16f&&g.playerY>14.7f,"residential roof landing joins the descending stair without a fall");}
+ for(int p=0;p<PANEL_COUNT;p++){g.playerY=12.12f;g.x=panel_origin_x(p)-12;g.z=panel_origin_z(p)-8.07f;g.fallVelocity=0;move(24,0);Q202(g.x>panel_origin_x(p)+11.8f&&ab(g.playerY-12.12f)<.001f&&!g.fallVelocity,"panel roof front flashing is supported across both wings and centre seam");
+ for(int w=0;w<2;w++){g.x=panel_origin_x(p)+(w?7:-7);g.z=panel_origin_z(p)+4;g.playerY=14.94f;Q202(panel_step(g.x+.2f,g.z)&&ab(g.playerY-14.94f)<.001f,"panel roof-access cap does not drop to the slab below");}}
+ for(int n=0;n<4;n++){g.x=cityBlockX[n]-5;g.z=cityBlockZ[n];g.playerY=high_floors180(n)*3+.12f;g.fallVelocity=0;move(10,0);Q202(g.x>cityBlockX[n]+4.9f&&ab(g.playerY-(high_floors180(n)*3+.12f))<.001f,"highrise roof precedes indoor-floor solver");}
+ g.x=hx[0];g.z=hz[0];g.playerY=15.16f;g.fallVelocity=0;Q202(panel_step(hx[0],hz[0]+8)&&g.fallVelocity<0,"walking past a real roof edge still starts a fall");g.fallVelocity=0;
+ // No stamina flicker around the old threshold; both healthy and exhausted controls.
+ test_reset();away202();g.energy=g.hunger=g.thirst=g.stamina=100;dehydrated=0;swimBlend141=0;stamina_tick202(10,1,1);Q202(g.stamina>44&&g.stamina<46,"healthy sprint consumes about 5.5 stamina/second, not eleven");g.stamina=0;stamina_tick202(0,0,0);Q202(!can_sprint()&&sprintLocked202,"zero stamina hard blocks sprint");stamina_tick202(1,0,0);Q202(g.stamina==0,"regeneration waits after sprint");for(int i=0;i<60;i++)stamina_tick202(.1f,0,0);Q202(g.stamina>14&&g.stamina<19&&!can_sprint(),"slow regeneration does not repeatedly restart sprint around five");for(int i=0;i<30;i++)stamina_tick202(.1f,0,0);stamina_tick202(0,0,0);Q202(g.stamina>=20&&can_sprint(),"sprinting unlocks after twenty stamina");g.stamina=0;g.x=180;g.z=-130;g.playerY=0;g.rot=yaw=0;g.look=pitch=0;keys['W']=keys[16]=1;float z=g.z;controls(.1f);float exhaustedDistance=g.z-z;Q202(exhaustedDistance<.30f&&exhaustedDistance>.20f,"holding Shift with empty stamina uses walking speed");g.stamina=100;g.z=z;g.x=180;controls(.1f);Q202(g.z-z>exhaustedDistance*1.5f,"recovered stamina restores actual running speed");memset(keys,0,sizeof(keys));memset(pressed,0,sizeof(pressed));
+ // Four ride instances: real seat anchors, continuous phase, braking, safe dismount.
+ for(int n=53;n<=57;n++)if(props150[n].type==8||props150[n].type==9){reset202();g.zoneFlags150&=~(63u<<16);g.playerY=0;Q202(ride_start202(n)&&seated==3000+n,"swing and carousel can be occupied");float startX=g.x,startY=g.playerY,startZ=g.z;for(int t=0;t<90;t++)ride_tick202(1.f/30);Q202(dst(startX,startZ,g.x,g.z)>.1f||ab(startY-g.playerY)>.05f,"rider follows the animated seat");float x,y,z;ride_position202(n,0,&x,&y,&z);Q202(dst(x,z,g.x,g.z)<.0001f&&ab(y-g.playerY)<.0001f,"collision position and rendered seat share the same anchor");int k=n-53;float phase=ridePhase202[k],amp=rideAmp202[k],omega=rideOmega202[k];pressed[32]=1;Q202(ride_controls202(.016f),"space controls the occupied ride without jumping");Q202(ridePhase202[k]==phase&&rideAmp202[k]==amp&&rideOmega202[k]==omega,"stopping does not reset or snap the phase");ride_tick202(.03f);Q202(rideAmp202[k]<amp&&rideAmp202[k]>.1f&&rideOmega202[k]<omega&&rideOmega202[k]>.1f,"swing and carousel coast down smoothly");Q202(ride_exit202()&&rideIndex202<0&&seated<0,"E can dismount every ride");Q202(body_clear150(g.x,g.z,g.playerY,.23f,1),"dismount is outside the prop and other colliders");}
+ // No seasonal ghosts, including a saved winter print viewed after changing season.
+ g.x=5;g.z=10;g.playerY=0;g.season=0;g.winter=1;g.trackHead190=0;track_add190(5,10,0,0,0);Q202(g.trackHead190==1,"winter creates footprints");g.weather=0;tracks_tick202(120);Q202(g.tracks190[0].age==120,"clear winter ages prints gradually");tracks_tick202(121);Q202(g.tracks190[0].age>=240,"winter footprints expire after four real minutes");g.tracks190[0].age=0;g.weather=1;tracks_tick202(60);Q202(g.tracks190[0].age>=240,"snowfall fills footprints faster");
+ for(int season=1;season<4;season++){g.season=season;g.winter=0;g.trackHead190=1;tracks_tick202(.03f);Q202(g.trackHead190==0,"non-winter season clears persisted snow history");track_add190(5,10,0,0,0);Q202(g.trackHead190==0,"no new snow prints in spring summer or autumn");}
+ // Indicators for every cabin and floor, using live runtime position not a stale save.
+ int current,target,direction,top;
+ for(int h=0;h<NH;h++)for(int f=0;f<5;f++){g.x=hx[h]+6.1f;g.z=hz[h]-6;g.playerY=g.residence[h].y=f*3;g.residence[h].target=f<4?f*3+3:f*3;Q202(lift_readout202(&current,&target,&direction,&top)&&current==f+1&&top==5,"residential cabin counter shows one-based current floor");}
+ for(int p=0;p<PANEL_COUNT;p++)for(int w=0;w<2;w++){g.x=panel_origin_x(p)+(w?7:-7)-3.5f;g.z=panel_origin_z(p)-6;g.playerY=panelRuntime[p].y[w]=4.5f;panelRuntime[p].target[w]=9;Q202(lift_readout202(&current,&target,&direction,&top)&&current==3&&target==4&&direction==1&&top==4,"panel cabin reads live travel height and destination");}
+ for(int n=0;n<4;n++){g.x=cityBlockX[n];g.z=cityBlockZ[n]-5.7f;g.playerY=g.highY180[n]=6;g.highTarget180[n]=0;Q202(lift_readout202(&current,&target,&direction,&top)&&current==3&&target==1&&direction==-1&&top==high_floors180(n),"highrise cabin counter and downward direction work");}
+ // Existing v17 saves remain loadable and never restore an occupied ride camera.
+ test_reset();away202();ride_start202(53);save_game();Q202(load_game()&&g.version==17&&rideIndex202==-1&&seated==-1,"save format unchanged; loading leaves transient ride state safely");
+ // Actual software-rendered scenes; no mockups or edited geometry.
+ test_reset();away202();set_resolution(2);g.hours=14;g.weather=0;g.winter=0;g.season=2;winterEnabled=0;g.trackHead190=0;noticeTime=0;
+ eye202(87,river_z(90)-10,1.5f,96,.2f,river_z(96)+7);shot("qa/v202/01_river.ppm");
+ eye202(hx[0]-3,hz[0]+3,15.16f,hx[0]+6.3f,15.5f,hz[0]-4);shot("qa/v202/02_roof.ppm");
+ g.zoneFlags150&=~(63u<<16);reset202();ride_start202(53);for(int i=0;i<120;i++)ride_tick202(1.f/30);pitch=g.look=-.18f;interaction();shot("qa/v202/03_swing_seated.ppm");ride_exit202();
+ ride_start202(54);for(int i=0;i<90;i++)ride_tick202(1.f/30);pitch=g.look=-.35f;interaction();shot("qa/v202/04_carousel_seated.ppm");ride_exit202();
+ eye202(-5,-18,1,-12,.5f,-13);shot("qa/v202/05_playground.ppm");
+ g.residence[0].y=4.5f;g.residence[0].target=9;eye202(hx[0]+6.1f,hz[0]-6,4.5f,hx[0]+6.1f,6.5f,hz[0]-6.915f);shot("qa/v202/06_lift.ppm");
+ g.season=0;g.winter=1;winterEnabled=1;g.weather=0;eye202(0,10,0,0,.05f,13);g.trackHead190=0;for(int k=0;k<12;k++)track_add190((k%2?.16f:-.16f),11+k*.24f,0,0,k%3==2?2:0);shot("qa/v202/07_winter_fresh.ppm");tracks_tick202(241);shot("qa/v202/08_winter_expired.ppm");g.season=2;g.winter=0;winterEnabled=0;tracks_tick202(.03f);shot("qa/v202/09_summer.ppm");
+ Q202(body_clear150(g.x,g.z,g.playerY,.20f,1),"final screenshot position remains valid");
+ printf("V202: %d checks, %d failures\n",checks202,fail202);return !!fail202;
+}

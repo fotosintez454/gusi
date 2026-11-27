@@ -1,0 +1,110 @@
+{
+  "version": "0.17.0",
+  "physical_metres_per_horizontal_unit": 1.35,
+  "floor_height_metres": 3,
+  "residence_origins_legacy_units": [
+    [
+      -30,
+      -24
+    ],
+    [
+      -10,
+      -24
+    ],
+    [
+      10,
+      -24
+    ],
+    [
+      30,
+      -24
+    ],
+    [
+      -30,
+      29
+    ],
+    [
+      -10,
+      29
+    ],
+    [
+      10,
+      29
+    ],
+    [
+      30,
+      29
+    ],
+    [
+      -77,
+      -64
+    ],
+    [
+      -57,
+      -64
+    ],
+    [
+      -77,
+      -88
+    ],
+    [
+      -57,
+      -88
+    ],
+    [
+      38,
+      -64
+    ],
+    [
+      58,
+      -64
+    ],
+    [
+      38,
+      -88
+    ],
+    [
+      58,
+      -88
+    ],
+    [
+      -77,
+      61
+    ],
+    [
+      -57,
+      61
+    ],
+    [
+      -77,
+      121
+    ],
+    [
+      -57,
+      121
+    ],
+    [
+      38,
+      61
+    ],
+    [
+      58,
+      61
+    ],
+    [
+      38,
+      121
+    ],
+    [
+      58,
+      121
+    ]
+  ],
+  "room_partition_z": 0.65,
+  "central_courtyard": {
+    "north_row_z": -24,
+    "south_row_z": 29,
+    "row_pitch_x": 20
+  },
+  "description": "New district zoning, larger horizontal metric, clear entry paths. Window job identifiers preserved."
+}

@@ -1,0 +1,9 @@
+#define HEADLESS
+#define main original_main
+#include "../src/main.c"
+#undef main
+#include <stddef.h>
+static int failed=0,total=0;
+#define S(c,m) do {total++;if(!(c)){failed++;printf("FAILSAVE200 %s\n",m);}}while(0)
+static void old_save200(int generation){size_t off=generation==190?offsetof(State,revision200):offsetof(State,revision190);size_t len=(off+7)&~(size_t)7;save_game();g.version=16;memset((char*)&g+off,0,len-off);FILE*f=fopen(savepath,"wb");S(f!=0,"open migration fixture");if(f){S(fwrite(&g,1,len,f)==len,"write migration fixture");fclose(f);}}
+int main(void){savepath="build/migration200.save";eventpath="build/migration200.csv";audio_init();nextWorldSeed=140;test_reset();g.money=4321;g.bank=987;g.reputation=35;g.food=3;inv_sync();g.things150[0]|=1u<<21;old_save200(190);S(load_game(),"v190 format16 migrates");S(g.version==17&&g.revision200==200&&held200<0,"new state initialized, held object reset");S(g.money==4321&&g.bank==987&&g.food==3,"migration preserves money and inventory");S(g.things150[0]&(1u<<21),"migration preserves household state");int bodies=0;for(int n=0;n<BODY200;n++)bodies+=!!g.bodies200[n].active;S(bodies==2,"migration initializes portable starter objects");old_save200(180);S(load_game(),"v180 format16 migrates");local_init190();S(g.money==4321&&g.revision190==190&&g.revision200==200,"both appended state generations initialized");g.bodies200[0].vx=NAN;g.bodies200[0].vy=INFINITY;g.bodies200[0].yaw=NAN;g.bodies200[1].kind=999;defaults200();S(g.bodies200[0].vx==0&&g.bodies200[0].vy==0&&g.bodies200[0].yaw==0,"invalid velocities and orientation sanitized");S(!g.bodies200[1].active,"invalid body kind rejected");save_game();S(load_game()&&g.money==4321,"migrated game resaves and reloads");remove(savepath);printf("SAVE200: %d checks, %d failures\n",total,failed);return !!failed;}

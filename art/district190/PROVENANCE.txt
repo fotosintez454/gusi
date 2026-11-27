@@ -1,0 +1,2 @@
+Original offline procedural art authored for this project. Generator: tools/build_art190.py. No downloaded game assets or supplied reference images embedded. Workwear atlas preserves original project face/skin cells; clothing cells newly authored.
+New animal, balcony, shop, bathroom and vehicle meshes: original editable procedural definitions in src/district190_draw.h. Human GLB retains its original skeleton/geometry and embeds the updated project-authored winter clothing atlas.

@@ -1,0 +1,24 @@
+ОКНО 0.20.4
+
+Нативные диагностические тесты O1, полный прогон:
+V160: 5382 checks, 0 failures
+PANEL160: 1200 actual-movement route checks, 0 failures
+LIFE160: 3 scenario checks, 0 failures
+REPAIRS160: 17 checks, 0 failures
+LAYOUT160: 44256 checks, 0 failures across 48 generated worlds
+ROOMLAYOUT160: 13210 checks, 0 failures
+ARCHITECTURE170: 4083 checks, 0 failures
+WORLD180: 1271 checks, 0 failures
+DISTRICT190: 435 checks190, 0 failures
+CROWD190 day: 40/40 exited, 8/8 roles arrived, 0 invalid residents, 0 teleports
+CROWD190 night: 40/40 home
+V200: 161 checks, 0 failures
+SAVE200: 14 checks, 0 failures
+V201: 505 checks, 0 failures
+V202: 375 checks, 0 failures
+V203: 51212 checks, 0 failures, 0 uncovered floor points
+V204: 1493 checks, 0 failures
+
+Windows: обычный EXE O2, SAFE O1, обе сборки завершены.
+Сцены: посадка на скамью, подвал, закрытая чердачная крыша.
+Живой Windows/OpenGL/Discord-сеанс не проверен.

@@ -1,0 +1,13 @@
+Сравнение с 0.20.2. CPU-время программного рендера, 800×450, одинаковые мир и настройки. Три серии по восемь кадров после прогрева; без настоящего клиента Discord. Это не замер Windows FPS.
+
+night_windows: 34.684 → 34.618 мс/кадр, изменение CPU-времени -0.2%.
+winter_track_history: 47.547 → 47.643 мс/кадр, изменение CPU-времени +0.2%.
+river_summer: 9.328 → 8.974 мс/кадр, изменение CPU-времени -3.8%.
+
+Исходные серии:
+BENCH202 night_windows resolution=800x450 ms_per_frame=34.684,34.607,34.869 draws=35211
+BENCH202 winter_track_history resolution=800x450 ms_per_frame=47.547,47.593,47.483 draws=69077
+BENCH202 river_summer resolution=800x450 ms_per_frame=9.332,9.328,9.312 draws=6121
+BENCH202 night_windows resolution=800x450 ms_per_frame=34.230,34.618,37.248 draws=35245
+BENCH202 winter_track_history resolution=800x450 ms_per_frame=47.643,47.496,48.008 draws=69201
+BENCH202 river_summer resolution=800x450 ms_per_frame=8.974,8.959,9.138 draws=6315

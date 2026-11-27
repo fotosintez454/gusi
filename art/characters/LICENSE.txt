@@ -1,0 +1,1 @@
+Original procedural character geometry and rig code: CC0 1.0 to the extent applicable. New face albedo images are AI-generated outputs; no claim of exclusive copyright or third-party asset licensing is made. See art/reference_pass/PROVENANCE_RU.txt. No STALKER asset was copied; no retargeting compatibility is asserted.
