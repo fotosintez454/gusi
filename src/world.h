@@ -179,6 +179,7 @@ static void snowbanks_draw(void){if(!winterEnabled)return;for(int n=0;n<18;n++){
 #include "update160_draw.h"
 #include "architecture170.h"
 #include "district180_draw.h"
+#include "street205.h"
 static void bodies_draw200(void);static void window_lights200(void);
 static void world(int pass){district_material_prepare();roof_material141();
  surfaceTex=0;worldclock=g.hours;float day=clamp((float)sin((g.hours-6)/24*2*PI)*.8f+.35f,.12f,1);
@@ -203,7 +204,7 @@ static void world(int pass){district_material_prepare();roof_material141();
  for(int n=0;n<4;n++)box(-44+(n%2?1.1f:-1.1f),.35f,-10+(n/2?1.35f:-1.35f),.22f,.6f,.6f,0x303b3b);
  for(int i=0;i<NN;i++)if(dst(camx,camz,PERSON(i).x,PERSON(i).z)<viewdist)human(lerp(npcPrevX[i],PERSON(i).x,visualAlpha),lerp(npcPrevZ[i],PERSON(i).z,visualAlpha),i,walkPhase[i],0);
 
- district_draw160();district_plan180();high_draw180();civic_draw190();winter_details190();locals_draw190();props_draw150();panel_draw();home_radio_draw();domestic_cat();neighborhood_details(day);quarter_details();update140_draw();
+ district_draw160();district_plan180();high_draw180();civic_draw190();winter_details190();locals_draw190();props_draw150();street_draw205();panel_draw();home_radio_draw();domestic_cat();neighborhood_details(day);quarter_details();update140_draw();
  for(int n=0;n<LOOT_COUNT;n++){float x,z;loot_position(n,&x,&z);if(dst(camx,camz,x,z)<45){surfaceTex=&mat_concrete;box(x+.55f,.025f,z,2.0f,.05f,1.8f,0x8a8c82);surfaceTex=&mat_metal;box(x+.55f,.57f,z,1.25f,1.02f,1.05f,n%3?0x426456:0x75664c);surfaceTex=0;box(x+.55f,1.11f,z,1.34f,.11f,1.15f,0x727b67);box(x+.55f,1.19f,z-.15f,.32f,.065f,.10f,0x383f36);for(int s=-1;s<=1;s+=2){box(x+.55f+s*.62f,.59f,z,.08f,.12f,.45f,0x9a9982);for(int t=-1;t<=1;t+=2)box(x+.55f+s*.48f,.11f,z+t*.37f,.16f,.20f,.16f,0x323c37);}if(winterEnabled)box(x+.55f,1.18f,z+.1f,1.25f,.035f,.77f,0xd5dcd5);soft_mesh(x-.35f,.20f,z+.35f,.23f,.25f,.22f,0,0x343e37);}}
 
  surfaceTex=&mat_asphalt;box(0,-.025f,0,264,.05f,12,0x565e5d);box(0,-.025f,-43,254,.05f,8,0x565e5d);box(0,-.025f,43,254,.05f,8,0x565e5d);paved_box202(-94,-.025f,0,8,.05f,174,0x565e5d);paved_box202(94,-.025f,0,8,.05f,174,0x565e5d);

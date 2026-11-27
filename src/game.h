@@ -79,6 +79,7 @@ static int npc_elder141(int n);static int bench_route141(int i,float dt);static 
 static int outside141(float x,float z,float margin);static float divider141(int h,int f);static int furniture141(float x,float z);static int roof_solid141(float x,float z);static float terrain_height141(float x,float z);static void water_tick141(float dt);
 static float path_target160(int h);
 
+static int street_prompt205(void);static int street_use205(int perform);static void street_tick205(float dt);static void street_build205(void);static void street_draw205(void);
 static unsigned int trafficSeed140=~0u;static float carX140[7],carZ140[7];
 static float shopX=52,shopZ=23;
 #define ATM_X (shopX-7.f)
@@ -303,7 +304,7 @@ static void simulate(float dt){
  if(g.health<=0){player_die();return;}
  g.weatherTimer-=dt;g.weather=g.weather==1?1:0;if(g.weatherTimer<=0){g.weather=rnd()>.55f;g.weatherTimer=240+rnd()*240;}
  for(int j=0;j<NJ;j++){if(g.absolute>g.jobs[j].deadline){int accepted=job_accepted(j);if(accepted){g.reputation=(int)mx(0,g.reputation-2);navHouse=-1;navOffice=0;}create_job(j);if(accepted)say("Принятый вызов просрочен. В заявках есть новый.");}}
- life_tick(dt);cat_tick(dt);
+ life_tick(dt);cat_tick(dt);street_tick205(dt);
  /* One local cat; no player-follow component. */
  g.petx=catX;g.petz=catZ;
  for(int a=0;a<g.apprentices;a++){if(g.autoWork[a]){g.apprenticeTimer[a]+=dt;if(g.apprenticeTimer[a]>75+(100-g.apprenticeXP[a])*1.5f){g.apprenticeTimer[a]=0;int j=a%NJ;if(job_accepted(j))j=(j+1)%NJ;if(g.apprenticeXP[a]>=25){paid_job(j,a);g.apprenticeXP[a]=mn(100,g.apprenticeXP[a]+3);}else{g.autoWork[a]=0;say("Ученик пока не справился. Покажи ему ещё несколько открываний.");}}}}
@@ -313,7 +314,7 @@ static void simulate(float dt){
 static int look_at(float x,float y,float z,float radius){float dx=(x-g.x)*WORLD_XZ,dy=y-(g.playerY+player_eye180()),dz=(z-g.z)*WORLD_XZ;float d=(float)sqrt(dx*dx+dy*dy+dz*dz);if(d>3.8f)return 0;float dot=dx*(float)sin(yaw)*(float)cos(pitch)+dy*(float)sin(pitch)+dz*(float)cos(yaw)*(float)cos(pitch);return dot>d*radius;}
 static int visible3d180(float ax,float ay,float az,float bx,float by,float bz){float old=g.playerY;int ok=1;for(int k=1;k<25;k++){float t=k/25.f;g.playerY=lerp(ay,by,t);if(building_solid(lerp(ax,bx,t),lerp(az,bz,t))){ok=0;break;}}g.playerY=old;return ok;}
 static int window_access(int id){if(id<0||id>=NW||g.playerY>.3f)return 0;float x,z,wx,wy,wz;windowpos(id,&x,&z);window_handle_pos(id,&wx,&wy,&wz);int h=id/3;return ab(g.x-hx[h])<4.6f&&g.z>hz[h]-4.05f&&g.z<hz[h]+4.05f&&(dst(g.x,g.z,wx,wz)<=2.6f||dst(g.x,g.z,x+.35f,z-.12f)<=2.5f)&&visible3d180(g.x,g.playerY+player_eye180(),g.z,wx,wy,wz-.1f);}
-static void interaction(void){targetWindow=-1;interactKind=0;interactIndex=-1;prompt[0]=0;if(room_use204(0))return;if(seated>=0){SN(prompt,sizeof(prompt),rideIndex202>=0?"E — встать / Пробел — раскачать или остановить":"Сидишь / E или движение — встать");return;}if(physics_prompt200()||extra_use200(0)||npc_target200())return;if(civic_use190(0))return;if(update140_use(0))return;if(high_use180(0))return;if(panel_prompt())return;
+static void interaction(void){targetWindow=-1;interactKind=0;interactIndex=-1;prompt[0]=0;if(room_use204(0))return;if(seated>=0){SN(prompt,sizeof(prompt),rideIndex202>=0?"E — встать / Пробел — раскачать или остановить":"Сидишь / E или движение — встать");return;}if(physics_prompt200()||extra_use200(0)||npc_target200())return;if(civic_use190(0))return;if(update140_use(0))return;if(high_use180(0))return;if(panel_prompt())return;if(street_prompt205())return;
  for(int k=0;k<NW;k++){float x,z;windowpos(k,&x,&z);float wx,wy,wz;window_handle_pos(k,&wx,&wy,&wz);if(window_access(k)&&(look_at(wx,wy,wz,.94f)||look_at(x+.35f,1.72f,z-.12f,.96f))){targetWindow=k;break;}}
  if(targetWindow>=0){SN(prompt,sizeof(prompt),"%s",work_hint(targetWindow));return;}
  if(use150(0)||prop_use150(0))return;
@@ -502,6 +503,7 @@ static void controls(float dt){
  if(pressed['E']&&(civic_use190(1)||update140_use(1)))return;
  if(pressed['E']&&high_use180(1))return;
  if(pressed['E']&&panel_interact())return;
+ if(pressed['E']&&street_use205(1))return;
  if(pressed['E']&&targetWindow>=0)toggle_window(targetWindow);
  /* Ordered balcony stays shut until all three mandatory checks succeed. */
  if(pressed['E']&&targetWindow<0){switch(interactKind){
