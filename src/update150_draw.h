@@ -15,10 +15,10 @@ static void glass150(V3 p,V3 q,V3 v,V3 u,int h,int f,int k){
  unsigned seed=hash32(g.worldSeed+h*389+f*173+k*31);
  int inside160=h<NH?(ab(camx-hx[h])<4.8f&&camz>hz[h]-4.4f&&camz<hz[h]+4.4f):(h<NH+PANEL_COUNT&&ab(camx-panel_origin_x(h-NH))<14.2f&&ab(camz-panel_origin_z(h-NH))<8.3f);
  int lit=window_lit151(h,f,k),side=window_household180(h,k);float left=seed%4!=0?(seed%3==0?.24f:.12f):0,right=seed%3==1?.84f:1;
- U32 curtain=(U32[]){0x666458,0x77715e,0x626e6b}[seed%3];
+ U32 curtain=(U32[]){0x958e78,0xa39a82,0x87927f}[seed%3];
  surfaceTex=0;
  if(left>0)pane_part201(p,q,v,u,0,left,curtain,0);
- if(!inside160)pane_part201(p,q,v,u,left,right,lit?(side<0?0xb8a77d:flat_color180(h,f,side)):(U32[]){0x414c53,0x536068,0x67716b,0x7b8076}[seed%4],lit);
+ if(!inside160)pane_part201(p,q,v,u,left,right,lit?(side<0?0xb8a77d:flat_color180(h,f,side)):(U32[]){0x7d8f98,0x93a1a2,0x84939a,0x9aa79c}[seed%4],lit);
  if(right<1)pane_part201(p,q,v,u,right,1,curtain,0);
 }
 /* v170: aperture, frame, lintel and mirrored hinge use the same measured span. */

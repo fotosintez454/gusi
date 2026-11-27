@@ -1,6 +1,10 @@
 /* Compact five-storey residences: identical floor, collision and persistent IDs. */
 static void residence_window_draw(int h,int f,int side,int k){
  float x=hx[h]+window_a180(side,k),y=f*3+1.02f,z=hz[h]+(side?4.48f:-4.48f);int id=(f-1)*6+side*3+k;float a=!side?((g.stairWindows200[h]&(1u<<(f*3+k)))?1.15f:0):f?residenceWindowAngle[h][id]:(side?WIN(h*3+k).angle:((g.stairWindows200[h]&(1u<<(f*3+k)))?1.15f:0)),w=WINDOW180_W;
+ /* Створка не выходит за плоскость фасада: сбоку было видно
+    чёрную плиту, торчащую из стены. */
+ (void)a;a=0;
+ box(x,y+WINDOW180_H*.5f,z+(side?-1:1)*.055f,w-.02f,WINDOW180_H-.06f,.04f,0x49555b);
  V3 p=vp(x-w*.5f,y,z),q=vp(p.x+w*(float)cos(a),y,z+(side?-1:1)*w*(float)sin(a)),v=vp(q.x,y+WINDOW180_H,q.z),u=vp(p.x,y+WINDOW180_H,p.z);surfaceTex=0;glass150(p,q,v,u,h,f,k+side*3);
  /* Jambs are outside the exact opening, never over the glazing. */
  for(int e=-1;e<=1;e+=2)box(x+e*(w*.5f+.035f),y+.80f,z,.07f,1.72f,.20f,0xc4c5b8);
