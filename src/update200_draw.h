@@ -12,6 +12,10 @@ static void window_lights200(void){
  /* Exterior pools of coloured light on snow/facade, tied to actual room switches. */
  for(int h=0;h<NH;h++){if(dst(camx,camz,hx[h],hz[h])>28)continue;for(int f=0;f<2;f++)for(int side=0;side<2;side++){float sg=side?1:-1;for(int k=0;k<3;k++){int lit=side?flat_lit180(h,f,k==2?1:0):(g.hours<9||g.hours>=16);if(!lit)continue;float x=hx[h]+window_a180(side,k),z=hz[h]+sg*4.74f;lighting_window200(x,f*3+1.75f,z,5.6f,3.7f,sg,side?flat_color180(h,f,k==2?1:0):0xe0c797);}}
   if(ab(camx-hx[h])<5&&ab(camz-hz[h])<4.5f){int f=(int)clamp((float)floor(g.playerY/3),0,4);if(sunlight>.3f)for(int s=-1;s<=1;s+=2)lighting_room(hx[h]+s*2.8f,f*3+2.45f,hz[h]+3.7f,1.4f,2.2f,sunlight*.9f,0xd7e3e0);}
+  /* Entrance lamp over each door throws a warm pool on the porch and snow. */
+  if(g.hours<9||g.hours>16)lighting_window200(hx[h]+7.50f,2.40f,hz[h]-8.55f,6.5f,2.9f,-1,0xffd9a0);
+  /* The barrel fire lights the yard around it (same condition as street205 draw). */
+  if(winterEnabled||g.hours>=17||g.hours<7)lighting_room(20,1.30f,-38,4.5f,4.5f,1.25f,0xff9a3c);
  }
  for(int p=0;p<PANEL_COUNT;p++){float x=panel_origin_x(p),z=panel_origin_z(p);if(dst(camx,camz,x,z)>31)continue;for(int w=0;w<2;w++)for(int side=0;side<2;side++)if(flat_lit180(NH+p,0,w*2+side)){float xx=x+(w?7:-7)+(side?1:-1)*5;lighting_window200(xx,1.75f,z+8.20f,5.6f,3.5f,1,flat_color180(NH+p,0,w*2+side));}}
  for(int n=0;n<4;n++){float x=cityBlockX[n],z=cityBlockZ[n];if(dst(camx,camz,x,z)>30)continue;for(int f=0;f<2;f++)for(int side=0;side<2;side++)if(high_lit180(n,f,side)){U32 c=high_color180(n,f,side);lighting_window200(x+(side?1:-1)*4.8f,f*3+1.4f,z+5.52f,5.8f,3.8f,1,c);lighting_window200(x+(side?1:-1)*6.8f,f*3+1.75f,z-5.50f,5.8f,3.8f,-1,c);}}

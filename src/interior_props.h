@@ -20,14 +20,21 @@ static void art_flat(float x,float z,float y,int side,int id){float old=sunlight
  box(x+side*5.675f,y+.63f,fz,.035f,1.10f,.94f,0xd2cbb0);box(x+side*5.675f,y+1.46f,fz,.035f,.49f,.94f,0xd2cbb0);box(x+side*5.644f,y+.99f,fz+.30f,.035f,.28f,.055f,0x706e60);box(x+side*5.644f,y+1.44f,fz+.30f,.035f,.16f,.055f,0x706e60);box(x+side*5.65f,y+1.64f,fz-.28f,.012f,.045f,.17f,0x858773);
  /* Oven and controls face the kitchen rather than the outer wall. */
  float sx=x+side*6.35f,sz=z-4;box(x+side*6.055f,y+.48f,sz,.025f,.52f,.88f,0xc9c6ae);box(x+side*6.035f,y+.47f,sz,.025f,.33f,.67f,0x343b36);box(x+side*6.015f,y+.72f,sz,.035f,.045f,.73f,0x777b6d);for(int k=0;k<3;k++)box(x+side*6.035f,y+.87f,sz-.24f+k*.24f,.04f,.075f,.075f,0x4e5249);
- if(panelStoveOn[panelIndex][id]){float r[]={.115f,.115f,.09f},hh[]={0,.012f,.016f};art_lathe(sx,y+1.027f,sz-.3f,r,hh,3,12,0xbd693c);}
+ /* Cooktop lies on the counter under the kettle; burners are its surface. */
  float kx=sx,kz=sz+.30f;
+ box(kx,y+.955f,kz,.66f,.03f,.56f,0x40453f);
+ {float r[]={.095f,.095f,.075f},hh[]={0,.012f,.016f};
+ if(panelStoveOn[panelIndex][id])art_lathe(kx,y+.9725f,kz,r,hh,3,12,0xbd693c);else art_lathe(kx,y+.9725f,kz,r,hh,3,12,0x33362f);
+ art_lathe(kx+.24f,y+.9725f,kz,r,hh,3,12,0x33362f);}
  /* A narrow counter supports the kettle; it no longer floats against the wall. */
  surfaceTex=&art_wood;box(kx,y+.91f,kz,.82f,.10f,.68f,0xffffff);box(kx,y+.44f,kz,.70f,.82f,.58f,0x887b65);surfaceTex=0;
- float rr[]={.085f,.12f,.115f,.085f,.065f,0},hh[]={0,.025f,.13f,.18f,.20f,.205f};art_lathe(kx,y+.97f,kz,rr,hh,6,12,0xb6b7a5);box(kx,y+1.23f,kz,.06f,.05f,.06f,0x424b41);beam(vp(kx-side*.08f,y+1.09f,kz),vp(kx-side*.21f,y+1.18f,kz),.048f,.022f,0xa2a894);for(int k=0;k<7;k++){float a=k*PI/7,b=(k+1)*PI/7;beam(vp(kx+.115f*cos(a),y+1.18f+.105f*sin(a),kz),vp(kx+.115f*cos(b),y+1.18f+.105f*sin(b),kz),.014f,.014f,0x42473e);}
+ float rr[]={.085f,.12f,.115f,.085f,.065f,0},hh[]={0,.025f,.13f,.18f,.20f,.205f};art_lathe(kx,y+.9725f,kz,rr,hh,6,12,0xb6b7a5);box(kx,y+1.23f,kz,.06f,.05f,.06f,0x424b41);beam(vp(kx-side*.08f,y+1.09f,kz),vp(kx-side*.21f,y+1.18f,kz),.048f,.022f,0xa2a894);for(int k=0;k<7;k++){float a=k*PI/7,b=(k+1)*PI/7;beam(vp(kx+.115f*cos(a),y+1.18f+.105f*sin(a),kz),vp(kx+.115f*cos(b),y+1.18f+.105f*sin(b),kz),.014f,.014f,0x42473e);}
  if(panelKettleHeat[panelIndex][id]>.8f&&g.uiMotion)for(int k=0;k<4;k++){float t=(float)fmod(realTime*.25f+k*.22f,1);beam(vp(kx-side*.23f+sin(realTime+k)*.02f,y+1.34f+t*.30f,kz),vp(kx-side*.23f+sin(realTime+k+.6f)*.02f,y+1.38f+t*.30f,kz+.01f),.009f,.012f,0xb1b3a3);}
  /* Cup, spoon, bread and a slatted stool around the existing kitchen table. */
- float tx=x+side*5.35f,tz=z-2.7f;float cr[]={.06f,.07f,.07f,.058f,.058f},ch[]={0,.025f,.17f,.17f,.035f};art_lathe(tx,y+.785f,tz,cr,ch,5,10,0xd0c1a0);beam(vp(tx,y+.925f,tz+.07f),vp(tx,y+.875f,tz+.12f),.012f,.012f,0xb7ad90);beam(vp(tx,y+.875f,tz+.12f),vp(tx,y+.815f,tz+.07f),.012f,.012f,0xb7ad90);beam(vp(tx+side*.2f,y+.79f,tz-.20f),vp(tx+side*.2f,y+.79f,tz+.04f),.009f,.009f,0xa8a58d);art_bevel(tx-side*.25f,y+.785f,tz-.1f,.24f,.10f,.16f,0xad8d55);
+ float tx=x+side*5.35f,tz=z-2.7f;float cr[]={0,.062f,.072f,.072f,.058f,.058f,0},ch[]={0,0,.025f,.17f,.17f,.035f,.035f};art_lathe(tx,y+.785f,tz,cr,ch,7,10,0xd0c1a0);
+ /* C-shaped handle: an arc of beams joined to the wall of the cup, not floating. */
+ for(int k=0;k<5;k++){float a=k*PI/4,b=(k+1)*PI/4;beam(vp(tx+.072f+.034f*cos(a),y+.905f+.052f*sin(a),tz),vp(tx+.072f+.034f*cos(b),y+.905f+.052f*sin(b),tz),.016f,.016f,0xb7ad90);}
+ beam(vp(tx+side*.2f,y+.79f,tz-.20f),vp(tx+side*.2f,y+.79f,tz+.04f),.009f,.009f,0xa8a58d);art_bevel(tx-side*.25f,y+.785f,tz-.1f,.24f,.10f,.16f,0xad8d55);
  /* The cup, spoon and bread belong on this table, not in mid-air. */
  art_kitchen_table(tx,y,tz);
  art_bulb(x+side*5.0f,y,z-1.5f);art_bulb(x+side*4.7f,y,z+4.6f);sunlight=old;surfaceTex=0;
