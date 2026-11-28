@@ -1,7 +1,12 @@
 /* v0.20.5: живой двор. Уличная жизнь 1990-х вокруг панелек:
    ларёк, таксофон, афишная стена, домино, колонка, бочка-костёр,
    футбольные ворота, «клад» под тополем, гитарист, объявления,
+
    бабки на лавке. Состояние живёт один сеанс: формат сохранения не меняется. */
+/* Freestanding build: platform.h exposes sin/cos/fmod as pointers; no libm floats. */
+#define sinf(a) ((float)sin(a))
+#define cosf(a) ((float)cos(a))
+#define fmodf(a,b) ((float)fmod((a),(b)))
 #define S205_KIOK 0
 #define S205_PHON 1
 #define S205_WALL 2
@@ -311,8 +316,8 @@ static void s205_barrel(Poi205*p,float day){
   for(int k=0;k<5;k++){float a=(k*.7f+st205.clock*2.2f);float r=.13f*sinf(st205.clock*3+k);
    soft_mesh(x+r,.98f+(k*.09f),z+cosf(a)*.10f,.13f,.16f,.12f,a,0xd07a2c);}
   soft_mesh(x,.92f,z,.24f,.2f,.24f,0,0xe8b25a);
-  if(s205_night())box(x,.9f,z,.7f,.5f,.7f,0x7a3d1c);
-  for(int k=0;k<4;k++){float t=fmodf(st205.clock*.35f+k*.25f,1.f);soft_mesh(x+.05f*sinf(k),(1.5f+t*2.0f),z+cosf(k)*.06f,.22f+t*.3f,.16f,.2f,0,0x6a6a60);}
+  if(s205_night())soft_mesh(x,.94f,z,.42f,.34f,.42f,0,0xd8893a);
+  for(int k=0;k<4;k++){float t=fmodf(st205.clock*.35f+k*.25f,1.f);soft_mesh(x+.05f*sinf(k),(1.5f+t*2.0f),z+cosf(k)*.06f,.22f+t*.3f,.16f,.2f,0,0x8f8f82);}
  }
  /* бревно и ящик для сидения */
  s205_plank(x+1.15f,.46f,z+.1f,.35f,2.1f,0x6a4f36);

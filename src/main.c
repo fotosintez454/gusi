@@ -51,9 +51,9 @@ void start(void){
  platform_init();net_load();radio_scan();if(SetProcessDPIAware)SetProcessDPIAware();audio_init();
  char storage[1024],eventStorage[1100],npcStorage[1100];char*app=getenv("LOCALAPPDATA");if(app){SN(storage,sizeof(storage),"%s\\OKNO_020.save",app);savepath=storage;SN(eventStorage,sizeof(eventStorage),"%s\\OKNO_events.csv",app);eventpath=eventStorage;SN(npcStorage,sizeof(npcStorage),"%s\\OKNO_npc_debug.csv",app);npcLogPath=npcStorage;}
  HANDLE inst=GetModuleHandleA(0);WC wc;memset(&wc,0,sizeof(wc));wc.size=sizeof(wc);wc.style=3|0x20;wc.proc=wndproc;wc.instance=inst;wc.cursor=LoadCursorA(0,(const char*)32512);wc.name="OknoNative3D";RegisterClassExA(&wc);
- window=CreateWindowExA(0,wc.name,"OKNO | Professional Window Opener | Update 0.20.4",0x10cf0000,100,80,1280,760,0,0,inst,0);if(!window)ExitProcess(1);dc=GetDC(window);if(SetStretchBltMode)SetStretchBltMode(dc,4);ShowWindow(window,5);
+ window=CreateWindowExA(0,wc.name,"OKNO | Professional Window Opener | Update 0.20.5",0x10cf0000,100,80,1280,760,0,0,inst,0);if(!window)ExitProcess(1);dc=GetDC(window);if(SetStretchBltMode)SetStretchBltMode(dc,4);ShowWindow(window,5);
 #ifndef FORCE_SOFTWARE
- if(!gpu_init()){gpu_shutdown();if(DestroyWindow){DestroyWindow(window);window=CreateWindowExA(0,wc.name,"OKNO 0.20.4 | CPU fallback",0x10cf0000,100,80,1280,760,0,0,inst,0);if(!window)ExitProcess(2);dc=GetDC(window);ShowWindow(window,5);}}
+ if(!gpu_init()){gpu_shutdown();if(DestroyWindow){DestroyWindow(window);window=CreateWindowExA(0,wc.name,"OKNO 0.20.5 | CPU fallback",0x10cf0000,100,80,1280,760,0,0,inst,0);if(!window)ExitProcess(2);dc=GetDC(window);ShowWindow(window,5);}}
 
  district_material_prepare();season_prepare();
  if(gpuActive){const Texture*warm[]={&mat_brick,&mat_redbrick,&mat_plaster,&mat_paint,&mat_roof,&mat_wood,&mat_floor,&mat_asphalt,&mat_grass,&mat_pavement,&mat_concrete,&mat_metal};for(int n=0;n<12;n++)gpu_texture_index(warm[n]);}

@@ -123,11 +123,15 @@ static U32 color_multiply(U32 a,U32 b){return rgb(((a>>16)&255)*((b>>16)&255)/25
 static float lighting_at(V3 pos,V3 normal,U32*tint){float len=(float)sqrt(normal.x*normal.x+normal.y*normal.y+normal.z*normal.z);if(len<.0001f)len=1;normal.x/=len;normal.y/=len;normal.z/=len;
  /* Geometry is two-sided. Orient the geometric normal toward the visible side. */
  if(normal.x*(camx-pos.x)+normal.y*(camy-pos.y)+normal.z*(camz-pos.z)<0){normal.x=-normal.x;normal.y=-normal.y;normal.z=-normal.z;}
- float direct=mx(0,normal.x*-.42f+normal.y*.78f+normal.z*-.45f);float light=.19f+sunlight*(.29f+.48f*direct);*tint=mix(0xb9c8e2,0xf0f0e5,sunlight);
+ float direct=mx(0,normal.x*-.42f+normal.y*.78f+normal.z*-.45f);
+ /* Cold night-sky ambient: dark, but shapes and silhouettes stay readable. */
+ float light=.26f+sunlight*(.26f+.48f*direct);*tint=mix(0xb9c8e2,0xf0f0e5,sunlight);
+ /* Point lights add up (energy-conserving falloff) instead of taking the max,
+    so several lamps, windows and a fire visibly pool their light. */
  for(int i=0;i<sceneLightCount;i++){RoomLight*l=&sceneLights[i];if(pos.y<l->floor+.02f||pos.y>l->floor+2.99f||ab(pos.x-l->x)>l->rx||ab(pos.z-l->z)>l->rz)continue;
- float dx=l->x-pos.x,dy=l->y-pos.y,dz=l->z-pos.z,d2=dx*dx+dy*dy+dz*dz,inv=1/(float)sqrt(mx(.03f,d2));float incidence=.25f+.75f*mx(0,(normal.x*dx+normal.y*dy+normal.z*dz)*inv);float point=l->power*incidence/(1+d2*.20f);if(point>.04f&&light_blocked((V3){l->x,l->y,l->z},pos))point*=.10f;light=mx(light,.30f+sunlight*.13f+point);*tint=mix(*tint,l->color,clamp(point*.85f,0,.72f));}
- for(int i=0;i<windowLightCount200;i++){WindowLight200*l=&windowLights200[i];float dx=l->x-pos.x,dy=l->y-pos.y,dz=l->z-pos.z;if(-dz*l->direction<-.25f||ab(dx)>l->radius||ab(dz)>l->radius||ab(dy)>l->radius)continue;float d2=dx*dx+dy*dy+dz*dz;if(d2>l->radius*l->radius)continue;float inv=1/(float)sqrt(mx(.04f,d2));float incidence=.18f+.82f*mx(0,(normal.x*dx+normal.y*dy+normal.z*dz)*inv);float edge=1-d2/(l->radius*l->radius);float point=l->power*incidence*edge*edge/(1+.18f*d2);light=mx(light,.20f+sunlight*.1f+point);*tint=mix(*tint,l->color,clamp(point*.6f,0,.8f));}
- return clamp(light,.14f,1.25f);}
+ float dx=l->x-pos.x,dy=l->y-pos.y,dz=l->z-pos.z,d2=dx*dx+dy*dy+dz*dz,inv=1/(float)sqrt(mx(.03f,d2));float incidence=.25f+.75f*mx(0,(normal.x*dx+normal.y*dy+normal.z*dz)*inv);float point=l->power*incidence/(1+d2*.20f);if(point>.04f&&light_blocked((V3){l->x,l->y,l->z},pos))point*=.10f;light+=point*.85f;sunlight+=point*.05f;*tint=mix(*tint,l->color,clamp(point*.85f,0,.72f));}
+ for(int i=0;i<windowLightCount200;i++){WindowLight200*l=&windowLights200[i];float dx=l->x-pos.x,dy=l->y-pos.y,dz=l->z-pos.z;if(-dz*l->direction<-.25f||ab(dx)>l->radius||ab(dz)>l->radius||ab(dy)>l->radius)continue;float d2=dx*dx+dy*dy+dz*dz;if(d2>l->radius*l->radius)continue;float inv=1/(float)sqrt(mx(.04f,d2));float incidence=.18f+.82f*mx(0,(normal.x*dx+normal.y*dy+normal.z*dz)*inv);float edge=1-d2/(l->radius*l->radius);float point=l->power*incidence*edge*edge/(1+.18f*d2);light+=point*.85f;*tint=mix(*tint,l->color,clamp(point*.6f,0,.8f));}
+ return clamp(light,.22f,1.3f);}
 
 static int lightingSplit=0;
 static V3 light_lerp3(V3 a,V3 b,float t){V3 r={lerp(a.x,b.x,t),lerp(a.y,b.y,t),lerp(a.z,b.z,t)};return r;}
