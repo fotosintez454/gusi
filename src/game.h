@@ -1,5 +1,6 @@
 #include "flat_layout.h"
 #include "engine.h"
+#include "qol206.h"
 static int rail_hit203(float a,float b,float y,float x,float z0,float z1,float y0,float y1){if(ab(a-x)>.055f||b<z0||b>z1)return 0;float base=lerp(y0,y1,(b-z0)/(z1-z0));return y>base-.8f&&y<base+.90f;}
 #define NH 24
 #define NW 72
@@ -74,15 +75,24 @@ static void safe_spawn160(void);
 static int props_solid150(float x,float z);static int prop_use150(int perform);
 static int navStatic150=0;static int physicsActor150=-1;static float sleepBlend150[NN];
 static void defaults150(void);static int room_solid150(float x,float z);static int furniture_solid150(float x,float z);static int body_clear150(float x,float z,float y,float radius,int people);static int use150(int perform);static int schedule150(int i);static int sleep_tick150(int i,float dt,int home);static int bench_release150(int i,float dt);static int npc_age150(int i);static const char*npc_job150(int i);static int object150(int h,int f,int s,int type,float*x,float*y,float*z,float*rx,float*rz);static int balcony_open150(int h,int f,int side);
-static float swimAir141=100,swimBlend141=0,sitting141[NN];static int npcBench141[NN],ignoreBench141=-1;
+static float swimAir141=100,swimBlend141=0,sitting141[NN];static int npcBench141[NN],ignoreBench141=-1,seatOverride141=0;
 static int npc_elder141(int n);static int bench_route141(int i,float dt);static void bench_position141(int n,float*x,float*z);
 static int outside141(float x,float z,float margin);static float divider141(int h,int f);static int furniture141(float x,float z);static int roof_solid141(float x,float z);static float terrain_height141(float x,float z);static void water_tick141(float dt);
 static float path_target160(int h);
 
+static int street_prompt205(void);static int street_use205(int perform);static void street_tick205(float dt);static void street_build205(void);static void street_draw205(void);
 static unsigned int trafficSeed140=~0u;static float carX140[7],carZ140[7];
 static float shopX=52,shopZ=23;
 #define ATM_X (shopX-7.f)
 #define ATM_Z (shopZ-2.f)
+/* Режим работы торговли: круглосуточный магазин — самый дальний ларёк района,
+   остальные открыты с 8 до 22, «У дома» — с 8 до 23. */
+static void quarter_shop(int n,float*x,float*z);
+static int shop247_index(void){int best=0;float bd=-1;for(int n=0;n<15;n++){float x,z;quarter_shop(n,&x,&z);float d=x*x+z*z;if(d>bd){bd=d;best=n;}}return best;}
+static int shop_is247(int n){return n>=0&&n==shop247_index();}
+static int shop_open205(int n){if(n==-1)return g.hours>=8&&g.hours<23;if(shop_is247(n))return 1;return g.hours>=8&&g.hours<22;}
+static int shopIndex205=-1;
+static void shop_hours_text205(int n,char*out,int cap){if(shop_is247(n))SN(out,cap,"круглосуточно");else SN(out,cap,"с 8:00 до 22:00");}
 static int home_route140(int i,float dt,int home);static void decor_build140(void);static void traffic_tick140(float dt);static int traffic_ped_clear201(float x,float z,float y,float radius);static void traffic_init140(void);static int traffic_solid140(float x,float z);static void update140_defaults(void);static void update140_tick(float dt);static int update140_use(int perform);static int roof_at(float x,float z,float*height);static void player_die(void);static int market_price(int base);static void bank_withdraw(int amount);static void bank_collect(void);static float river_z(float x);static int river_water(float x,float z);static int bridge_at202(float x,float z);static int garage_roof203(float x,float z,float*height);
 
 static void expansion_defaults(void);static void economy_tick(void);
@@ -303,7 +313,7 @@ static void simulate(float dt){
  if(g.health<=0){player_die();return;}
  g.weatherTimer-=dt;g.weather=g.weather==1?1:0;if(g.weatherTimer<=0){g.weather=rnd()>.55f;g.weatherTimer=240+rnd()*240;}
  for(int j=0;j<NJ;j++){if(g.absolute>g.jobs[j].deadline){int accepted=job_accepted(j);if(accepted){g.reputation=(int)mx(0,g.reputation-2);navHouse=-1;navOffice=0;}create_job(j);if(accepted)say("Принятый вызов просрочен. В заявках есть новый.");}}
- life_tick(dt);cat_tick(dt);
+ life_tick(dt);cat_tick(dt);street_tick205(dt);
  /* One local cat; no player-follow component. */
  g.petx=catX;g.petz=catZ;
  for(int a=0;a<g.apprentices;a++){if(g.autoWork[a]){g.apprenticeTimer[a]+=dt;if(g.apprenticeTimer[a]>75+(100-g.apprenticeXP[a])*1.5f){g.apprenticeTimer[a]=0;int j=a%NJ;if(job_accepted(j))j=(j+1)%NJ;if(g.apprenticeXP[a]>=25){paid_job(j,a);g.apprenticeXP[a]=mn(100,g.apprenticeXP[a]+3);}else{g.autoWork[a]=0;say("Ученик пока не справился. Покажи ему ещё несколько открываний.");}}}}
@@ -313,7 +323,7 @@ static void simulate(float dt){
 static int look_at(float x,float y,float z,float radius){float dx=(x-g.x)*WORLD_XZ,dy=y-(g.playerY+player_eye180()),dz=(z-g.z)*WORLD_XZ;float d=(float)sqrt(dx*dx+dy*dy+dz*dz);if(d>3.8f)return 0;float dot=dx*(float)sin(yaw)*(float)cos(pitch)+dy*(float)sin(pitch)+dz*(float)cos(yaw)*(float)cos(pitch);return dot>d*radius;}
 static int visible3d180(float ax,float ay,float az,float bx,float by,float bz){float old=g.playerY;int ok=1;for(int k=1;k<25;k++){float t=k/25.f;g.playerY=lerp(ay,by,t);if(building_solid(lerp(ax,bx,t),lerp(az,bz,t))){ok=0;break;}}g.playerY=old;return ok;}
 static int window_access(int id){if(id<0||id>=NW||g.playerY>.3f)return 0;float x,z,wx,wy,wz;windowpos(id,&x,&z);window_handle_pos(id,&wx,&wy,&wz);int h=id/3;return ab(g.x-hx[h])<4.6f&&g.z>hz[h]-4.05f&&g.z<hz[h]+4.05f&&(dst(g.x,g.z,wx,wz)<=2.6f||dst(g.x,g.z,x+.35f,z-.12f)<=2.5f)&&visible3d180(g.x,g.playerY+player_eye180(),g.z,wx,wy,wz-.1f);}
-static void interaction(void){targetWindow=-1;interactKind=0;interactIndex=-1;prompt[0]=0;if(room_use204(0))return;if(seated>=0){SN(prompt,sizeof(prompt),rideIndex202>=0?"E — встать / Пробел — раскачать или остановить":"Сидишь / E или движение — встать");return;}if(physics_prompt200()||extra_use200(0)||npc_target200())return;if(civic_use190(0))return;if(update140_use(0))return;if(high_use180(0))return;if(panel_prompt())return;
+static void interaction(void){targetWindow=-1;interactKind=0;interactIndex=-1;prompt[0]=0;if(room_use204(0))return;if(seated>=0){SN(prompt,sizeof(prompt),rideIndex202>=0?"E — встать / Пробел — раскачать или остановить":"Сидишь / E или движение — встать");return;}if(physics_prompt200()||extra_use200(0)||npc_target200())return;if(civic_use190(0))return;if(update140_use(0))return;if(high_use180(0))return;if(panel_prompt())return;if(street_prompt205())return;
  for(int k=0;k<NW;k++){float x,z;windowpos(k,&x,&z);float wx,wy,wz;window_handle_pos(k,&wx,&wy,&wz);if(window_access(k)&&(look_at(wx,wy,wz,.94f)||look_at(x+.35f,1.72f,z-.12f,.96f))){targetWindow=k;break;}}
  if(targetWindow>=0){SN(prompt,sizeof(prompt),"%s",work_hint(targetWindow));return;}
  if(use150(0)||prop_use150(0))return;
@@ -321,8 +331,13 @@ static void interaction(void){targetWindow=-1;interactKind=0;interactIndex=-1;pr
  if(0){interactKind=1;SN(prompt,sizeof(prompt),"Кровать / сон и пропуск времени");}
  if(g.playerY<.3f&&dst(g.x,g.z,HOME_TOILET_X,HOME_TOILET_Z)<1.9f){interactKind=2;SN(prompt,sizeof(prompt),"E — туалет  |  U — помочиться  |  K — по-большому");}
 
- for(int p=0;p<15;p++){float qx,qz;quarter_shop(p,&qx,&qz);if(g.playerY<.3f&&g.z<qz-1.2f&&dst(g.x,g.z,qx,qz-1.3f)<2.5f&&look_at(qx,1.3f,qz,.88f)){interactKind=4;shopType=0;SN(prompt,sizeof(prompt),"ЛКМ — продукты / квартальный ларёк");return;}}
- if(ab(g.x-shopX)<4.5f&&g.z>shopZ-5.8f&&g.z<shopZ+3&&dst(g.x,g.z,shopX,shopZ)<5.8f){interactKind=4;shopType=0;SN(prompt,sizeof(prompt),"E — магазин «У дома»");}
+ for(int p=0;p<15;p++){float qx,qz;quarter_shop(p,&qx,&qz);if(g.playerY<.3f&&g.z<qz-1.2f&&dst(g.x,g.z,qx,qz-1.3f)<2.5f&&look_at(qx,1.3f,qz,.88f)){interactKind=4;shopType=0;shopIndex205=p;
+   if(shop_is247(p))SN(prompt,sizeof(prompt),"E — магазин 24/7: открыт круглосуточно");
+   else if(!shop_open205(p))SN(prompt,sizeof(prompt),"E — ларёк закрыт, объявление «с 8:00»");
+   else SN(prompt,sizeof(prompt),"E — продукты / квартальный ларёк");
+   return;}}
+ if(ab(g.x-shopX)<4.5f&&g.z>shopZ-5.8f&&g.z<shopZ+3&&dst(g.x,g.z,shopX,shopZ)<5.8f){interactKind=4;shopType=0;shopIndex205=-1;
+  SN(prompt,sizeof(prompt),shop_open205(-1)?"E — магазин «У дома»":"E — магазин «У дома» закрыт до 8:00");}
  if(dst(g.x,g.z,OX,OZ+1.8f)<2.4f){interactKind=7;SN(prompt,sizeof(prompt),"E — касса evroremont prodaction. К выплате: %d руб.",g.salary);}
  if(dst(g.x,g.z,KX,KZ)<3.5f&&!solid(g.x,g.z)){interactKind=8;SN(prompt,sizeof(prompt),"E — «Табак • Напитки»: сигареты и пиво");}
  if(recycle_near()&&look_at(RECYCLE_X,1.1f,RECYCLE_Z+1.2f,.8f)){interactKind=14;SN(prompt,sizeof(prompt),"Приём стекла и металла / открыть");return;}
@@ -424,12 +439,13 @@ static void opening_tick(float dt){
  }else{openProgress+=dt*.205f*work_efficiency();if((openHits==0&&openProgress>=.24f)||(openHits==1&&openProgress>=.62f))begin_check();else if(openProgress>=1&&openHits>=2)finish_window(opening);}
  if(opening>=0){float a=clamp((openProgress-.26f)/.74f,0,1);a=a*a*(3-2*a);WIN(opening).angle=practiceMode?a*1.48f:a*.24f;}
 }
-static int option_count(void){return optionsTab==0?8:optionsTab==1?12:optionsTab==2?4:9;}
+static int option_count(void){return optionsTab==0?9:optionsTab==1?12:optionsTab==2?5:9;}
 static void change_option(int dir){
- if(optionsTab==0)switch(optionsRow){case 0:set_resolution((quality+dir+5)%5);break;case 1:if(dir>0){set_resolution(2);viewdist=80;detail=1;antialias=1;}else{set_resolution(1);viewdist=65;detail=0;antialias=0;}break;case 2:antialias=!antialias;break;case 3:viewdist=clamp(viewdist+dir*10,55,125);break;case 4:detail=(detail+dir+3)%3;break;case 5:field=clamp(field+dir*5,55,90);break;case 6:hudScale=clamp(hudScale+dir*.05f,.75f,1.15f);break;case 7:frameLimit=(int)clamp(frameLimit+dir*30,30,120);break;}
+ if(optionsTab==0)switch(optionsRow){case 0:set_resolution((quality+dir+5)%5);break;case 1:if(dir>0){set_resolution(2);viewdist=80;detail=1;antialias=1;}else{set_resolution(1);viewdist=65;detail=0;antialias=0;}break;case 2:antialias=!antialias;break;case 3:viewdist=clamp(viewdist+dir*10,55,125);break;case 4:detail=(detail+dir+3)%3;break;case 5:field=clamp(field+dir*5,55,90);break;case 6:hudScale=clamp(hudScale+dir*.05f,.75f,1.15f);break;case 7:frameLimit=(int)clamp(frameLimit+dir*30,30,120);break;case 8:qol_toggle_fullscreen();break;}
  else if(optionsTab==1)switch(optionsRow){case 0:easy=!easy;break;case 1:sensitivity=clamp(sensitivity+dir*.0003f,.001f,.006f);break;case 2:headbob=!headbob;break;case 3:invertY=!invertY;break;case 4:skillAssist=!skillAssist;break;case 5:autoChecks=!autoChecks;break;case 6:showHints=!showHints;break;case 7:hudMode=(hudMode+dir+3)%3;break;case 8:showRadar=0;showGoalMarker=!showGoalMarker;break;case 9:aimMultiplier=clamp(aimMultiplier+dir*.05f,.2f,1);break;case 10:bobAmplitude=clamp(bobAmplitude+dir*.005f,0,.07f);break;case 11:npcDebugEnabled=!npcDebugEnabled;break;}
  else if(optionsTab==3){switch(optionsRow){case 0:focus_profile(!g.focusMode);break;case 1:g.hudOpacity=clamp(g.hudOpacity+dir*.1f,0,1);break;case 2:g.uiMotion=(g.uiMotion+dir+3)%3;break;case 3:g.popupMode=!g.popupMode;break;case 4:g.highContrast=!g.highContrast;break;case 5:g.fastMode=!g.fastMode;break;case 6:g.mapSize=clamp(g.mapSize+dir*.05f,.75f,1.2f);break;case 7:g.mapOpacity=clamp(g.mapOpacity+dir*.1f,.1f,1);break;case 8:g.season=(g.season+dir+4)%4;g.seasonDay=g.day;g.winter=g.season==0;if(!g.winter)g.trackHead190=0;winterEnabled=g.winter;navReady=0;season_prepare();break;}}
- else switch(optionsRow){case 0:masterVolume=(int)clamp(masterVolume+dir*10,0,100);break;case 1:ambientVolume=(int)clamp(ambientVolume+dir*10,0,100);break;case 2:effectsVolume=(int)clamp(effectsVolume+dir*10,0,100);audio(5);break;case 3:soundEnabled=!soundEnabled;break;}
+ else switch(optionsRow){case 0:masterVolume=(int)clamp(masterVolume+dir*10,0,100);break;case 1:ambientVolume=(int)clamp(ambientVolume+dir*10,0,100);break;case 2:effectsVolume=(int)clamp(effectsVolume+dir*10,0,100);audio(5);break;case 3:soundEnabled=!soundEnabled;break;case 4:musicVolume=(int)clamp(musicVolume+dir*10,0,100);audio(5);break;}
+ qol_settings_save();
 }
 static void actor_tick180(float dt){
  float want=keys[17]?1:0;crouch180+=clamp(want-crouch180,-dt*7,dt*7);
@@ -502,13 +518,14 @@ static void controls(float dt){
  if(pressed['E']&&(civic_use190(1)||update140_use(1)))return;
  if(pressed['E']&&high_use180(1))return;
  if(pressed['E']&&panel_interact())return;
+ if(pressed['E']&&street_use205(1))return;
  if(pressed['E']&&targetWindow>=0)toggle_window(targetWindow);
  /* Ordered balcony stays shut until all three mandatory checks succeed. */
  if(pressed['E']&&targetWindow<0){switch(interactKind){
   case 1:screen=17;break;
   case 2:g.bladder=0;g.bowel=0;say("Нужды справлены. Руки вымыты.");break;
   case 3:g.petBond=mn(100,g.petBond+2);g.stress=mx(0,g.stress-5);say("Хрюкот: мяу-хрю. Кажется, вы понимаете друг друга.");break;
-  case 4:audio(0);shopType=0;screen=4;break;
+  case 4:if(!shop_open205(shopIndex205)){audio(5);say(shop_is247(shopIndex205)?"":"Закрыто. Ставни опущены, на двери объявление «с 8:00».");}else{audio(0);shopType=0;screen=4;}break;
   case 5:screen=16;break;
   case 7:screen=9;break;
   case 8:shopType=1;screen=4;break;

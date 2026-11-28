@@ -1,11 +1,20 @@
 /* Compact five-storey residences: identical floor, collision and persistent IDs. */
 static void residence_window_draw(int h,int f,int side,int k){
  float x=hx[h]+window_a180(side,k),y=f*3+1.02f,z=hz[h]+(side?4.48f:-4.48f);int id=(f-1)*6+side*3+k;float a=!side?((g.stairWindows200[h]&(1u<<(f*3+k)))?1.15f:0):f?residenceWindowAngle[h][id]:(side?WIN(h*3+k).angle:((g.stairWindows200[h]&(1u<<(f*3+k)))?1.15f:0)),w=WINDOW180_W;
- V3 p=vp(x-w*.5f,y,z),q=vp(p.x+w*(float)cos(a),y,z+(side?-1:1)*w*(float)sin(a)),v=vp(q.x,y+WINDOW180_H,q.z),u=vp(p.x,y+WINDOW180_H,p.z);surfaceTex=0;glass150(p,q,v,u,h,f,k+side*3);
+ /* Створка не выходит за плоскость фасада: сбоку было видно
+    чёрную плиту, торчащую из стены. */
+ (void)a;a=0;
+ V3 p=vp(x-w*.5f-.035f,y,z),q=vp(p.x+(w+.07f)*(float)cos(a),y,z+(side?-1:1)*(w+.07f)*(float)sin(a)),v=vp(q.x,y+WINDOW180_H,q.z),u=vp(p.x,y+WINDOW180_H,p.z);surfaceTex=0;glass150(p,q,v,u,h,f,k+side*3);
  /* Jambs are outside the exact opening, never over the glazing. */
  for(int e=-1;e<=1;e+=2)box(x+e*(w*.5f+.035f),y+.80f,z,.07f,1.72f,.20f,0xc4c5b8);
  box(x,y-.065f,z,w+.20f,.10f,.30f,0xc4c5b8);box(x,y+1.655f,z,w+.14f,.07f,.20f,0xc4c5b8);
  beam(p,q,.030f,.030f,0xb9bbaa);beam(q,v,.03f,.03f,0xb9bbaa);beam(v,u,.03f,.03f,0xb9bbaa);beam(u,p,.03f,.03f,0xb9bbaa);beam(blend3(p,q,.5f),blend3(u,v,.5f),.025f,.025f,0xb9bbaa);
+ /* Светлые откосы проёма: сбоку окно больше не смотрится чёрной щелью. */
+ {float zr=z+(side?-1:1)*.09f;
+  box(x,y+WINDOW180_H+.01f,zr,w+.04f,.09f,.05f,0x9a9c92);
+  box(x,y-.01f,zr,w+.04f,.09f,.05f,0x9a9c92);
+  box(x-w*.5f-.01f,y+WINDOW180_H*.5f,zr,.07f,WINDOW180_H+.08f,.05f,0x9a9c92);
+  box(x+w*.5f+.01f,y+WINDOW180_H*.5f,zr,.07f,WINDOW180_H+.08f,.05f,0x9a9c92);}
  V3 handle=blend3(q,v,.46f);box(handle.x-.04f,handle.y,handle.z-.04f,.06f,.14f,.06f,0xd4ceba);
 }
 static void facade180(int side,float x,float z,float y,U32 paint){

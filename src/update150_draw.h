@@ -11,14 +11,33 @@ static void pane_part201(V3 p,V3 q,V3 v,V3 u,float a,float b,U32 col,int emissiv
  V3 aa=blend3(p,q,a),bb=blend3(p,q,b),cc=blend3(u,v,b),dd=blend3(u,v,a);
  if(emissive)glow150(aa,bb,cc,dd,col);else quadstrip(aa,bb,cc,dd,col);
 }
+/* Полоса внутри проёма: a..b по ширине, t0..t1 по высоте (0 — низ). */
+static void pane_band201(V3 p,V3 q,V3 v,V3 u,float a,float b,float t0,float t1,U32 col,int em){
+ V3 l0=blend3(p,u,t0),l1=blend3(p,u,t1),r0=blend3(q,v,t0),r1=blend3(q,v,t1);
+ V3 aa=blend3(l0,r0,a),bb=blend3(l0,r0,b),cc=blend3(l1,r1,b),dd=blend3(l1,r1,a);
+ if(em)glow150(aa,bb,cc,dd,col);else quadstrip(aa,bb,cc,dd,col);
+}
 static void glass150(V3 p,V3 q,V3 v,V3 u,int h,int f,int k){
  unsigned seed=hash32(g.worldSeed+h*389+f*173+k*31);
  int inside160=h<NH?(ab(camx-hx[h])<4.8f&&camz>hz[h]-4.4f&&camz<hz[h]+4.4f):(h<NH+PANEL_COUNT&&ab(camx-panel_origin_x(h-NH))<14.2f&&ab(camz-panel_origin_z(h-NH))<8.3f);
  int lit=window_lit151(h,f,k),side=window_household180(h,k);float left=seed%4!=0?(seed%3==0?.24f:.12f):0,right=seed%3==1?.84f:1;
- U32 curtain=(U32[]){0x666458,0x77715e,0x626e6b}[seed%3];
+ U32 curtain=(U32[]){0x958e78,0xa39a82,0x87927f}[seed%3];
  surfaceTex=0;
  if(left>0)pane_part201(p,q,v,u,0,left,curtain,0);
- if(!inside160)pane_part201(p,q,v,u,left,right,lit?(side<0?0xb8a77d:flat_color180(h,f,side)):(U32[]){0x414c53,0x536068,0x67716b,0x7b8076}[seed%4],lit);
+ if(!inside160){
+  U32 pane=lit?(side<0?0xb8a77d:flat_color180(h,f,side)):(U32[]){0x7d8f98,0x93a1a2,0x84939a,0x9aa79c}[seed%4];
+  pane_part201(p,q,v,u,left,right,pane,lit);
+  if(lit){
+   /* объём: тень у потолка, у подоконника и по краям створки */
+   pane_band201(p,q,v,u,left,right,.90f,1,pane>>1&0x7f7f7f,1);
+   pane_band201(p,q,v,u,left,right,0,.13f,pane>>1&0x7f7f7f,1);
+   pane_band201(p,q,v,u,left,left+(right-left)*.06f,0,1,pane>>1&0x7f7f7f,0);
+   pane_band201(p,q,v,u,right-(right-left)*.06f,right,0,1,pane>>1&0x7f7f7f,0);
+  }else{
+   /* дневной отблеск неба сверху по стеклу */
+   pane_band201(p,q,v,u,left,right,.72f,1,0xb9c6cb,0);
+  }
+ }
  if(right<1)pane_part201(p,q,v,u,right,1,curtain,0);
 }
 /* v170: aperture, frame, lintel and mirrored hinge use the same measured span. */
@@ -62,7 +81,7 @@ static void studio150_draw(int h,float y){float x=hx[h],z=hz[h];int f=(int)(y/3)
  box(x+sign*.14f,y+1.8f,z+2.8f,.035f,.65f,.85f,0x6f6658);box(x+sign*.16f,y+1.8f,z+2.8f,.025f,.49f,.68f,0x7e8b85);
  lived_flat170(x,z,y,(int)sign);
  /* Every substantial furniture piece uses object150 for rendering and collision. */
- for(int t=0;t<22;t++){if(t==10||t==20||(t==6&&g.chairMoved200[id]))continue;float a,b,c,rx,rz;object150(h,f,s,t,&a,&b,&c,&rx,&rz);if(t==0){box(a,y+.98f,c,rx*2,1.96f,rz*2,0xa2a89e);if(flags&2){box(a-sign*.46f,y+1.03f,c-.35f,.05f,1.8f,.70f,0xaeb5aa);for(int k=0;k<3;k++)box(a,y+.5f+k*.45f,c-.4f,.70f,.035f,.06f,0x656e68);}else{box(a,y+1.02f,c+.41f,.75f,1.85f,.035f,0xb6b9ad);box(a+sign*.25f,y+1.1f,c+.45f,.035f,.25f,.035f,0x6c7771);}}
+ for(int t=0;t<22;t++){if(t==10||t==20||(t==6&&g.chairMoved200[id]))continue;float a,b,c,rx,rz;object150(h,f,s,t,&a,&b,&c,&rx,&rz);if(t==0){box(a,y+.98f,c,rx*2,1.96f,rz*2,0xa2a89e);if(flags&2){box(a-sign*(rx+.06f),y+1.03f,c+.76f,.05f,1.8f,.70f,0xaeb5aa);for(int k=0;k<3;k++)box(a,y+.5f+k*.45f,c-.16f,rx*2-.10f,.035f,.06f,0x656e68);}else{box(a,y+1.02f,c+.41f,rx*2-.04f,1.85f,.035f,0xb6b9ad);box(a+sign*.25f,y+1.1f,c+.45f,.035f,.25f,.035f,0x6c7771);}}
  else if(t==1){surfaceTex=&mat_wood;box(a,y+.38f,c,.46f,.72f,.48f,0x887b65);box(a,y+.76f,c,.50f,.10f,.52f,0xbdb6a1);surfaceTex=0;float kr[]={.075f,.125f,.12f,.09f,.06f,0},kh[]={0,.03f,.18f,.23f,.245f,.25f};art_lathe(a,y+.82f,c,kr,kh,6,12,0xc7c9bd);beam(vp(a,y+.95f,c),vp(a-sign*.22f,y+1.04f,c),.04f,.025f,0xc7c9bd);for(int k=0;k<6;k++){float v=k*PI/6,w=(k+1)*PI/6;beam(vp(a+.12f*cos(v),y+1.03f+.12f*sin(v),c),vp(a+.12f*cos(w),y+1.03f+.12f*sin(w),c),.018f,.018f,0x353d3b);}box(a+.17f,y+.88f,c,.04f,.035f,.04f,g.kettleOn200[id]?0xe4a45c:0x56615b);if(g.kettle200[id]>.85f&&g.uiMotion)for(int k=0;k<3;k++){float t=(float)fmod(realTime*.5f+k*.3f,1);beam(vp(a-sign*.22f,y+1.08f+t*.23f,c),vp(a-sign*.22f+.02f*sin(realTime+k),y+1.12f+t*.23f,c),.008f,.01f,0xc2ccc5);}}
  else if(t==2){
  surfaceTex=&mat_wood;

@@ -11,9 +11,30 @@ static void paper(int x,int y,int w,int h){rect((int)((x+3)*UI),(int)((y+4)*UI),
  ur(x,y,w,1,0x586368);ur(x,y+h-1,w,1,0x3a474d);
 }
 static void inv_btn(int x,int y,int w,const char*label,int action,int param){int hov=uiMouseX>=x&&uiMouseX<x+w&&uiMouseY>=y&&uiMouseY<y+36;
- if(uiPaperMode){if(hov){rect((int)(x*UI),(int)(y*UI),(int)(w*UI),(int)(36*UI),0x414c53);ur(x,y,3,36,0x813b2d);}ur(x+8,y+35,w-16,1,0x586368);}else{up(x,y,w,36,hov?0x414c53:0x242c30,.95f);ur(x,y+35,w,1,0x586368);}
- float scale=.43f;while(scale>.29f&&textwidth(label,scale)>w-24)scale-=.01f;int tx=w<60?x+(w-textwidth(label,scale))/2:x+12;ut(tx,y+9,label,scale,hov?accent:white);ui_hit(x,y,w,36,action,param);}
+ static int lastHoverAct=-9999;int hkey=action*1000+param;if(hov){if(hkey!=lastHoverAct&&uiSoundOn&&screen!=0)audio(4);lastHoverAct=hkey;}else if(lastHoverAct==hkey)lastHoverAct=-9999;
+ int gx=hov?x-2:x,gy=hov?y-1:y,gw=hov?w+4:w,gh=hov?38:36;
+ if(uiPaperMode){if(hov){rect((int)(gx*UI),(int)(gy*UI),(int)(gw*UI),(int)(gh*UI),0x414c53);ur(gx,gy,3,gh,0x813b2d);}ur(x+8,y+35,w-16,1,0x586368);}else{up(gx,gy,gw,gh,hov?0x414c53:0x242c30,.95f);ur(gx,gy+gh-1,gw,1,hov?0x7d8a80:0x586368);}
+ float scale=hov?.445f:.43f;while(scale>.29f&&textwidth(label,scale)>gw-24)scale-=.01f;int tx=w<60?x+(w-textwidth(label,scale))/2:x+12;ut(tx,gy+9,label,scale,hov?accent:white);ui_hit(x,y,w,36,action,param);}
 static void ui_button(int x,int y,int w,const char*l,int a,int p){inv_btn(x,y,w,l,a,p);}
+static float ui_fade_alpha(void){if(!uiFadeOn||uiFadeDur<=0)return 0;float t=(realTime-uiFadeStart)/uiFadeDur;if(t<0)t=0;return 1-clamp(t,0,1);}
+/* v0.20.6: a small in-world arrow replaces the OS pointer in menus. */
+static void ui_cursor(void){
+ if(screen==0)return;
+ int x=(int)(uiMouseX*UI),y=(int)(uiMouseY*UI);if(x<-40||y<-40||x>W+40||y>H+40)return;
+ for(int i=0;i<14;i++){int w=13-i;if(w<1)w=1;rect(x+1+(int)(i*.52f),y+1+i,w,1,0x0a0d0c);}
+ for(int i=0;i<11;i++){int w=10-i;if(w<1)w=1;rect(x+2+(int)(i*.52f),y+2+i,w,1,0xe8e3d3);}
+ rect(x+2,y+13,2,5,0xd9d3c2);rect(x+3,y+14,1,3,0x1b201e);
+}
+/* v0.20.6: click-to-set volume slider, shared by the pause menu. */
+static float volTrackX[3]={0},volTrackW[3]={0};
+static void vol_slider(int x,int y,int w,const char*label,int value,int slot){
+ ut(x,y-18,label,.34f,muted);
+ up(x,y,w,10,0x1d2422,1);ur(x,y,w,1,0x3c4643);ur(x,y+9,w,1,0x141a19);
+ int fw=(int)((w-2)*value/100.f);if(fw>0)ur(x+1,y+1,fw,8,0xbfa267);
+ int kx=x+1+(int)((w-3)*value/100.f);ur(kx,y-4,3,18,0xe8e3d3);ur(kx+1,y-3,1,16,0x9a948a);
+ char b[16];SN(b,sizeof(b),"%d%%",value);ut(x+w+12,y-4,b,.36f,white);
+ volTrackX[slot]=x;volTrackW[slot]=w;ui_hit(x,y-6,w,22,70,slot);
+}
 static void separator(int y){ur(42,y,716,1,0x455258);}
 static void modal(const char*kicker,const char*title){panel(0,0,W,H,0x111610,.74f);paper(24,20,752,418);ut(44,36,kicker,.35f,0x929f9e);ut(42,55,title,.96f,0xc6cbc4);ut(655,39,"ОКНО / 0.20.4",.30f,0x929f9e);separator(98);}
 static void wrapped(int x,int y,const char*s){int pos=0;for(int line=0;line<5&&s[pos];line++){char b[240];int start=pos,last=pos,chars=0;while(s[pos]&&chars<70){if(s[pos]==32)last=pos;if(((unsigned char)s[pos]&192)!=128)chars++;pos++;}if(s[pos]&&last>start)pos=last;int n=pos-start;if(n>238)n=238;memcpy(b,s+start,n);b[n]=0;ut(x,y+line*22,b,.44f,white);while(s[pos]==32)pos++;}}
@@ -67,16 +88,17 @@ static void micro_widget(void){if(!microActive)return;up(305,195,190,166,0x242c3
 static void options_page(void){
  modal("Параметры","Настройки");
  const char*tabs[]={"ГРАФИКА","ИГРА","ЗВУК","ФОКУС / СЕЗОНЫ"};for(int i=0;i<4;i++){int x=36+i*184;ui_hit(x,103,174,31,4,i);up(x,103,174,31,i==optionsTab?0x465966:0x3b3f31,1);ut(x+10,109,tabs[i],.44f,i==optionsTab?accent:muted);}
- const char*glabels[]={"Разрешение рендера","Качество","Фильтрация текстур","Дальность видимости","Детализация","Угол обзора","Масштаб компактного HUD","Лимит кадров"};
+ const char*glabels[]={"Разрешение рендера","Качество","Фильтрация текстур","Дальность видимости","Детализация","Угол обзора","Масштаб компактного HUD","Лимит кадров","Полный экран"};
  const char*plabels[]={"Щадящий режим","Чувствительность мыши","Покачивание камеры","Инверсия вертикали","Помощь в проверках","Автопрохождение проверок","Контекстные подсказки","Режим интерфейса","Метка цели","Точность прицела","Амплитуда камеры","Диагностика NPC"};
  const char*flabels[]={"Меньше визуального шума","Прозрачность HUD","Анимация UI","Всплывающие сообщения","Контрастные подсказки","Быстрый режим движения","Размер карты","Прозрачность карты","Зима"};
- const char*alabels[]={"Общая громкость","Окружение: ветер и птицы","Эффекты: шаги, окна, проверки","Звук включён"};char b[96];
+ const char*alabels[]={"Общая громкость","Окружение: ветер и птицы","Эффекты: шаги, окна, проверки","Звук включён","Музыка / радио"};char b[96];
  for(int n=0;n<option_count();n++){int x=34+(n/6)*370,y=142+(n%6)*41;if(n==optionsRow)up(x,y-2,360,38,0x334550,1);ut(x+8,y,optionsTab==0?glabels[n]:optionsTab==1?plabels[n]:optionsTab==2?alabels[n]:flabels[n],.40f,white);b[0]=0;
-  if(optionsTab==0)switch(n){case 0:SN(b,sizeof(b),"%d × %d",W,H);break;case 1:SN(b,sizeof(b),"%s",quality<=1?"Быстро":quality==2?"Баланс":"Чётко / Full HD");break;case 2:SN(b,sizeof(b),"%s",antialias?"Вкл.":"Выкл.");break;case 3:SN(b,sizeof(b),"%d м",(int)viewdist);break;case 4:SN(b,sizeof(b),"%s",detail==0?"Низкая":detail==1?"Средняя":"Высокая");break;case 5:SN(b,sizeof(b),"%d°",(int)field);break;case 6:SN(b,sizeof(b),"%d%%",(int)(hudScale*100));break;case 7:SN(b,sizeof(b),"%d",frameLimit);break;}
+  if(optionsTab==0)switch(n){case 0:SN(b,sizeof(b),"%d × %d",W,H);break;case 1:SN(b,sizeof(b),"%s",quality<=1?"Быстро":quality==2?"Баланс":"Чётко / Full HD");break;case 2:SN(b,sizeof(b),"%s",antialias?"Вкл.":"Выкл.");break;case 3:SN(b,sizeof(b),"%d м",(int)viewdist);break;case 4:SN(b,sizeof(b),"%s",detail==0?"Низкая":detail==1?"Средняя":"Высокая");break;case 5:SN(b,sizeof(b),"%d°",(int)field);break;case 6:SN(b,sizeof(b),"%d%%",(int)(hudScale*100));break;case 7:SN(b,sizeof(b),"%d",frameLimit);break;case 8:SN(b,sizeof(b),"%s",fullscreenOn?"Вкл. (F11)":"Выкл.");break;}
   else if(optionsTab==1){int v=n==0?easy:n==2?headbob:n==3?invertY:n==4?skillAssist:n==5?autoChecks:n==11?npcDebugEnabled:showHints;if(n==1)SN(b,sizeof(b),"%.2f",sensitivity/.0028f);else if(n==7)SN(b,sizeof(b),"%s",hudMode==0?"Полный":hudMode==1?"Минимал":"Выключен");else if(n==8)SN(b,sizeof(b),"%s",showGoalMarker?"Да":"Нет");else if(n==9)SN(b,sizeof(b),"%.2f",aimMultiplier);else if(n==10)SN(b,sizeof(b),"%.3f м",bobAmplitude);else SN(b,sizeof(b),"%s",v?"Вкл.":"Выкл.");}
   else if(optionsTab==3){switch(n){case 0:SN(b,sizeof(b),"%s",g.focusMode?"Вкл.":"Выкл.");break;case 1:SN(b,sizeof(b),"%d%%",(int)(g.hudOpacity*100+.5f));break;case 2:SN(b,sizeof(b),"%s",g.uiMotion==0?"OFF":g.uiMotion==1?"LOW":"NORMAL");break;case 3:SN(b,sizeof(b),"%s",g.popupMode?"Да":"Нет");break;case 4:SN(b,sizeof(b),"%s",g.highContrast?"Да":"Нет");break;case 5:SN(b,sizeof(b),"%s",g.fastMode?"Да":"Нет");break;case 6:SN(b,sizeof(b),"%d%%",(int)(g.mapSize*100));break;case 7:SN(b,sizeof(b),"%d%%",(int)(g.mapOpacity*100));break;case 8:SN(b,sizeof(b),"%s",season_name());break;}}
-  else{if(n==3)SN(b,sizeof(b),"%s",soundEnabled?"Да":"Нет");else SN(b,sizeof(b),"%d%%",n==0?masterVolume:n==1?ambientVolume:effectsVolume);}
+  else{if(n==3)SN(b,sizeof(b),"%s",soundEnabled?"Да":"Нет");else if(n==4)SN(b,sizeof(b),"%d%%",musicVolume);else SN(b,sizeof(b),"%d%%",n==0?masterVolume:n==1?ambientVolume:effectsVolume);}
   ui_hit(x,y-2,252,38,10,n);inv_btn(x+268,y,36,"-",3,n*2);inv_btn(x+312,y,36,"+",3,n*2+1);ut(x+8,y+18,b,.38f,accent);
+  if(optionsTab==2){int vv=n==0?masterVolume:n==1?ambientVolume:n==2?effectsVolume:n==4?musicVolume:-1;if(vv>=0){int fw=(int)(102*vv/100.f);up(x+150,y+18,104,9,0x1d2422,1);ur(x+150,y+18,104,1,0x3c4643);if(fw>0)ur(x+151,y+19,fw,7,0xbfa267);ur(x+151+fw,y+15,2,15,0xe8e3d3);}}
  }
  
 }
@@ -106,15 +128,29 @@ static const char*goal_title(void){if(navService==1)return "Приём стек�
 static void goal_point(float*x,float*y,float*z){nav_target(x,z);*y=1.6f;if(navService==2&&insideHouse==0){*x=hx[0]-1.1f;*z=hz[0]+3.0f;*y=.9f;}if(!navService&&!navOffice&&job_accepted(g.activeJob)){int j=g.activeJob,h=g.jobs[j].house,f=work_floor(g.workTarget[j]);if(g.workTarget[j]>=3000){int n=(g.workTarget[j]-3000)/24;if(high_at180(g.x,g.z)==n){if(ab(g.playerY-f*3)>.25f){*x=cityBlockX[n];*z=cityBlockZ[n]-5.0f;*y=f*3+1.2f;}else work_point(g.workTarget[j],x,y,z);}}else if(residence_at(g.x,g.z)==h){if(ab(g.playerY-f*3)>.25f||g.x>hx[h]+4.65f){*x=hx[h]+4.93f;*z=hz[h]-3;*y=f*3+1.3f;}else work_point(g.workTarget[j],x,y,z);}}}
 
 static void goal_marker(void){if(!goal_active())return;float x,y,z;goal_point(&x,&y,&z);float dx=x-camx,dz=z-camz,dy=y-camy,side=dx*cy-dz*sy,forward=dx*sy+dz*cy,vertical=dy*cp-forward*sp,depth=dy*sp+forward*cp;float xx=400,yy=160;if(depth>.15f){xx=400+side*focal/depth/UI;yy=225-vertical*focal/depth/UI;}else xx=side<0?34:766;int off=depth<=.15f||xx<32||xx>768||yy<118||yy>300;xx=clamp(xx,34,766);yy=clamp(yy,124,296);int ix=(int)xx,iy=(int)yy;line2((int)(ix*UI),(int)((iy-7)*UI),(int)((ix+7)*UI),(int)(iy*UI),accent);line2((int)((ix+7)*UI),(int)(iy*UI),(int)(ix*UI),(int)((iy+7)*UI),accent);line2((int)(ix*UI),(int)((iy+7)*UI),(int)((ix-7)*UI),(int)(iy*UI),accent);line2((int)((ix-7)*UI),(int)(iy*UI),(int)(ix*UI),(int)((iy-7)*UI),accent);char b[64];SN(b,sizeof(b),"%s%d м",off?"Цель / ":"",(int)(sqrt((g.x-x)*(g.x-x)+(g.z-z)*(g.z-z)+(g.playerY+1.7f-y)*(g.playerY+1.7f-y))+.5f));int tw=(int)(textwidth(b,.34f*UI)/UI);int tx=(int)clamp(ix-tw/2,18,782-tw);up(tx-5,iy+12,tw+10,21,0x152127,.95f);ut(tx,iy+16,b,.34f,white);}
-static void hud_vital(int x,int y,const char*name,float value,U32 color){up(x-5,y-4,114,33,0x242c30,.90f);char b[48];SN(b,sizeof(b),"%s %d",name,(int)value);ut(x,y,b,.33f,value<20?0xf0ae91:0xc6cbc4);ur(x,y+18,98,3,0x405159);ur(x,y+18,(int)(98*clamp(value,0,100)/100),3,value<20?0xe79b80:color);}
+static void hud_vital(int x,int y,const char*name,float value,U32 color){
+ char b[48];int w=148,h=38;
+ up(x,y,w,h,0x14191b,.88f);ur(x,y,w,1,0x39423f);ur(x,y,2,h,value<20?0xe79b80:color);
+ SN(b,sizeof(b),"%s",name);ut(x+11,y+6,b,.29f,value<20?0xf0ae91:0x9fa8a2);
+ SN(b,sizeof(b),"%d",(int)value);int tw=(int)(textwidth(b,.40f*UI)/UI);ut(x+w-tw-10,y+4,b,.40f,value<20?0xe79b80:0xd8ddd6);
+ int bx=x+11,by=y+25,bw=w-22;
+ ur(bx,by,bw,4,0x2a3335);int fw=(int)(bw*clamp(value,0,100)/100);if(fw>0)ur(bx,by,fw,4,value<20?0xe79b80:color);
+ for(int k=1;k<4;k++)ur(bx+k*bw/4,by,1,4,0x11171a);
+}
+static void hud_note(int x,int y,const char*t,U32 dot){int tw=(int)(textwidth(t,.32f*UI)/UI);up(x-10,y-5,tw+30,21,0x14191b,.80f);ur(x-10,y-5,2,21,dot);ur(x-3,y+3,4,4,dot);ut(x+8,y,t,.32f,0xb9c0b8);}
 static void hud_caption(int x,int y,const char*t,float sc,U32 col){ut(x+1,y+1,t,sc,0x151a16);ut(x,y,t,sc,col);}
 static void hud(void){if(hudMode!=2&&g.hudOpacity>.01f){overlayAlpha=g.hudOpacity;char b[240];
- SN(b,sizeof(b),"%02d:%02d",(int)g.hours,(int)(g.hours*60)%60);hud_caption(735,22,b,.40f,0xc6cbc4);
- hud_vital(24,407,"Здоровье",g.health,0xb66855);hud_vital(146,407,"Выносливость",g.stamina,0xb8c29e);
- SN(b,sizeof(b),"%s / карта %d / наличные %d",season_name(),g.bank,g.money);hud_caption(24,54,b,.31f,0xc6cbc4);
- int yy=338;const char*labels[]={"Плохо себя чувствую","Надо поесть","Хочется пить","Надо поспать","Надо передохнуть"};float needs[]={g.health,g.hunger,g.thirst,g.energy,g.stamina};int shown=0;for(int i=0;i<5;i++)if(needs[i]<30&&shown<3){hud_caption(24,yy,labels[i],.39f,needs[i]<12?0xe2a68e:0xc6cbc4);yy-=19;shown++;}
- if(goal_active()){float x,y,z;goal_point(&x,&y,&z);SN(b,sizeof(b),"%s / %d м",goal_title(),(int)(sqrt((g.x-x)*(g.x-x)+(g.z-z)*(g.z-z)+(g.playerY+1.7f-y)*(g.playerY+1.7f-y))+.5f));hud_caption(24,25,b,.37f,0xc6cbc4);if(showGoalMarker&&workPending<0)goal_marker();}
- if(prompt[0]&&showHints&&!microActive){const char*start=0;SN(b,sizeof(b),"%s",start?start+5:prompt);char*end=ui_find(b,"  |  ");if(end)*end=0;float size=.42f;while(textwidth(b,size)>580&&size>.30f)size-=.01f;int tw=(int)(textwidth(b,size*UI)/UI);up((800-tw-28)/2,363,tw+28,29,0x242c30,.76f);uc(371,b,size,0xc6cbc4);}
+ {int cw=132,ch=48,cx=800-cw-16,cy=14;up(cx,cy,cw,ch,0x14191b,.85f);ur(cx,cy,cw,1,0x39423f);ur(cx,cy,2,ch,0xbfa267);
+  SN(b,sizeof(b),"%02d:%02d",(int)g.hours,(int)(g.hours*60)%60);ut(cx+12,cy+6,b,.68f,0xe8e3d3);
+  SN(b,sizeof(b),"%s / день %d",season_name(),g.day);ut(cx+12,cy+31,b,.25f,0x9aa39d);}
+ hud_vital(24,404,"Здоровье",g.health,0xb66855);hud_vital(180,404,"Выносливость",g.stamina,0xb8c29e);
+ SN(b,sizeof(b),"%s / карта %d / наличные %d",season_name(),g.bank,g.money);hud_note(24,26,b,0xbfa267);
+ int yy=338;const char*labels[]={"Плохо себя чувствую","Надо поесть","Хочется пить","Надо поспать","Надо передохнуть"};float needs[]={g.health,g.hunger,g.thirst,g.energy,g.stamina};int shown=0;for(int i=0;i<5;i++)if(needs[i]<30&&shown<3){hud_note(24,yy,labels[i],needs[i]<12?0xe2a68e:0x8d978c);yy-=25;shown++;}
+ if(goal_active()){float x,y,z;goal_point(&x,&y,&z);SN(b,sizeof(b),"%s / %d м",goal_title(),(int)(sqrt((g.x-x)*(g.x-x)+(g.z-z)*(g.z-z)+(g.playerY+1.7f-y)*(g.playerY+1.7f-y))+.5f));hud_note(24,54,b,0x9ab5ac);if(showGoalMarker&&workPending<0)goal_marker();}
+ if(prompt[0]&&showHints&&!microActive){const char*start=0;SN(b,sizeof(b),"%s",start?start+5:prompt);char*end=ui_find(b,"  |  ");if(end)*end=0;float size=.42f;while(textwidth(b,size)>540&&size>.30f)size-=.01f;int tw=(int)(textwidth(b,size*UI)/UI);int px=(800-tw-46)/2,py=363;
+  up(px,py,tw+46,30,0x14191b,.82f);ur(px,py,tw+46,1,0x39423f);ur(px,py,3,30,0xbfa267);
+  up(px+9,py+5,20,20,0x2b3436,1);ut(px+12,py+8,"E",.26f,0xd8c79a);
+  ut(px+37,py+8,b,size,0xcdd2c9);}
  if(noticeTime>0&&(g.popupMode||realTime<sleepNoticeUntil||realTime<workNoticeUntil)){up(170,78,460,32,0x242c30,.90f);float ns=.34f;while(textwidth(notice,ns)>435&&ns>.23f)ns-=.01f;uc(87,notice,ns,white);}overlayAlpha=1;}
  if(hudMode!=2&&(interactKind||targetWindow>=0||prompt[0]))rect(W/2-1,H/2-1,2,2,accent);micro_widget();skill_widget();if(itemAnim>0){ur(350,329,100,2,0x514f43);ur(350,329,(int)(100*(1-itemAnim/consume_duration())),2,accent);}}
 static void dialogue_button(int y,const char*label,int action,int param){int hover=uiMouseX>=36&&uiMouseX<746&&uiMouseY>=y&&uiMouseY<y+25;if(hover){ur(36,y,710,25,0x34382e);ur(36,y,2,25,0xbfa267);}ut(48,y+5,label,.40f,hover?0xf0d59c:0xd3d0ba);ui_hit(36,y,710,25,action,param);}
@@ -140,8 +176,31 @@ static void draw_ui(void){UI=W/800.f;uiPaperMode=0;overlayAlpha=1;uiCount=0;uiBu
  if(screen==0){hud();bonus_widget();int f202,t202,d202,m202;if(lift_readout202(&f202,&t202,&d202,&m202)){ur(300,40,200,52,0x172d2b);SN(b,sizeof(b),"ЭТАЖ %d / %d",f202,m202);ut(316,49,b,.48f,0x9ee7b0);SN(b,sizeof(b),d202?"%s / едем на %d":"Лифт остановлен",d202>0?"Вверх":"Вниз",t202);ut(316,74,b,.31f,0xc5d0c2);}if(sprintLocked202)ut(295,99,"Нет сил / восстановись до 20",.32f,0xd7b17f);}
  else if(screen==25){modal("НОВЫЙ МИР / СИД","Создать район");ut(42,130,"Оставь поле пустым — каждый раз будет новый район.",.46f,white);ut(42,175,"Либо введи число от 0 до 4294967295. Backspace — стереть.",.39f,muted);SN(b,sizeof(b),"Сид: %s",seedLen140?seedInput140:"случайный");ut(42,227,b,.78f,accent);if(noticeTime>0)ut(42,270,notice,.34f,accent);inv_btn(42,304,340,"Создать / Enter",52,0);inv_btn(414,304,340,"Отмена",2,1);}
  else if(screen==26){modal("СЕТЕВАЯ ИГРА / RADMIN VPN","Локальное лобби");ut(42,121,"Хост: создай лобби. Друг: введи IPv4-адрес хоста из Radmin VPN.",.43f,white);SN(b,sizeof(b),"Адрес друга: %s_",netAddress[0]?netAddress:"введи цифры и точки");ut(42,164,b,.55f,accent);inv_btn(42,218,340,"Создать лобби",61,0);inv_btn(414,218,340,"Подключиться",62,0);ut(42,282,net_status_text(),.50f,white);if(netError[0])ut(42,321,netError,.37f,0xd99a7d);ut(42,365,"Порт: 27001 / TCP. Разреши игру в брандмауэре Windows.",.35f,muted);inv_btn(42,397,220,"Отключиться",63,0);inv_btn(530,397,220,"Назад",2,1);}
- else if(screen==1){panel(0,0,W,H,0x111711,.32f);paper(30,24,328,414);ur(50,48,288,1,0x989278);ut(50,58,"ФЕВРАЛЬ. ПОСЛЕ СМЕНЫ.",.32f,0x9aa6a4);ut(46,91,"ОКНО",1.95f,0xb8a77d);ut(51,173,"Утро начинается не сразу.",.36f,0x9aa6a4);inv_btn(50,218,282,"Продолжить",1,13);inv_btn(50,264,282,"Новый мир / сид",2,25);inv_btn(50,310,282,"Настройки",1,79);inv_btn(50,356,282,"Сетевая игра",2,26);inv_btn(50,402,282,"Закончить смену",1,27);}
- else if(screen==2){modal("Можно немного выдохнуть","Пауза");inv_btn(220,118,360,"Продолжить",1,13);inv_btn(220,166,360,"Карта района",2,11);inv_btn(220,214,360,"Опции",1,79);inv_btn(220,262,360,"Сохранить",1,83);inv_btn(220,310,360,"Выйти в главное меню",1,77);}
+ else if(screen==1){panel(0,0,W,H,0x0b100f,.55f);
+  up(40,32,360,386,0x12181a,.93f);ur(40,32,360,2,0xbfa267);ur(40,32,2,386,0xbfa267);
+  ut(64,52,"ФЕВРАЛЬ. ПОСЛЕ СМЕНЫ.",.30f,0x9aa6a4);
+  ut(60,82,"ОКНО",1.75f,0xe8e3d3);
+  ur(64,182,308,1,0x4a534d);
+  ut(64,194,"Утро начинается не сразу.",.34f,0x9aa6a4);
+  inv_btn(64,216,308,"Продолжить",1,13);
+  inv_btn(64,256,308,"Новый мир / сид",2,25);
+  inv_btn(64,296,308,"Настройки",1,79);
+  inv_btn(64,336,308,"Сетевая игра",2,26);
+  inv_btn(64,376,308,"Закончить смену",1,27);
+  up(420,96,340,258,0x12181a,.82f);ur(420,96,340,2,0x39423f);
+  ut(442,114,"УПРАВЛЕНИЕ",.28f,0xbfa267);
+  ut(442,144,"WASD / мышь — идти и смотреть",.33f,0xc3c9c1);
+  ut(442,168,"E — взаимодействие, ЛКМ — меню",.33f,0xc3c9c1);
+  ut(442,192,"Tab — записная книжка, M — карта",.33f,0xc3c9c1);
+  ut(442,216,"Esc — пауза, F1 — справка",.33f,0xc3c9c1);
+  ur(442,244,296,1,0x39423f);
+  ut(442,258,"1996-й. Панельки, зима, чужие балконы.",.31f,0x9aa39d);
+  ut(442,282,"Смена начинается в подъезде.",.31f,0x9aa39d);}
+ else if(screen==2){modal("Можно немного выдохнуть","Пауза");
+  inv_btn(60,118,300,"Продолжить",1,13);inv_btn(60,166,300,"Карта района",2,11);inv_btn(60,214,300,"Опции",1,79);inv_btn(60,262,300,"Сохранить",1,83);inv_btn(60,310,300,"Выйти в главное меню",1,77);
+  up(404,110,348,252,0x1a211f,.92f);ur(404,110,348,1,0x39423f);ur(404,110,2,252,0xbfa267);ut(424,120,"ЗВУК И ОКНО",.34f,accent);
+  vol_slider(424,172,196,"Общая громкость",masterVolume,0);vol_slider(424,218,196,"Музыка / радио",musicVolume,1);vol_slider(424,264,196,"Эффекты",effectsVolume,2);
+  inv_btn(424,306,196,fullscreenOn?"Оконный режим":"Полный экран",71,0);ut(628,318,fullscreenOn?"F11":"F11",.30f,muted);}
  else if(screen==3){modal("Записная книжка / работа","Заявки соседей");for(int j=0;j<NJ;j++){Job*q=&g.jobs[j];int y=118+j*79;up(42,y,712,69,0x2d373b,1);SN(b,sizeof(b),"%s / %s",house_label190(q->house),"Балкон");ut(54,y+9,b,.43f,white);SN(b,sizeof(b),"Дом %d / этаж %d / %d руб.",q->house+1,work_floor(g.workTarget[j])+1,q->pay);ut(54,y+39,b,.38f,muted);inv_btn(585,y+18,156,job_accepted(j)?"На карте":"Принять",32,j);if(job_accepted(j))ut(426,y+39,"В работе",.38f,accent);}inv_btn(42,363,220,"Маршрут к кассе",47,0);inv_btn(278,363,220,"Оплатить счета",1,66);}
  else if(screen==4)inv_page(1);else if(screen==5)inv_page(0);else if(screen==6)options_page();else if(screen==8)stats_page();
  else if(screen==9){modal("Касса","Оплата работы");SN(b,sizeof(b),"К зачислению: %d руб.",g.salary);ut(42,132,b,.86f,white);ut(42,199,"Зарплата поступает на карту. Банкомат — у магазина.",.47f,muted);inv_btn(42,266,340,"Зачислить на карту",1,13);}
@@ -161,6 +220,8 @@ static void draw_ui(void){UI=W/800.f;uiPaperMode=0;overlayAlpha=1;uiCount=0;uiBu
  if(screen==16){modal("Чужая квартира","Кошелёк на столе");ut(42,131,"Можно взять деньги, но это кража.",.60f,white);ut(42,184,"Если заметят — испортишь репутацию. Пропажу могут найти позже.",.39f,muted);inv_btn(42,260,340,"Взять деньги",34,0);inv_btn(414,260,340,"Не трогать",34,1);}
  if(screen==2&&noticeTime>0)ut(42,387,notice,.28f,muted);
  if((screen==4||screen==5||screen==7||screen==9)&&noticeTime>0)ut(42,101,notice,.29f,accent);
+ float fa206=ui_fade_alpha();if(fa206>.004f){overlayAlpha=fa206;up(0,0,W,H,0x05070a,fa206);overlayAlpha=1;}
+ ui_cursor();
  if(screen>2&&screen!=4&&screen!=5&&screen!=10&&screen!=22){inv_btn(648,397,110,"Назад",1,27);}
  if(help){uiCount=0;modal("Справка","Как играть");const char*l[]={"Наводись на ручки окон, двери и предметы.","Взаимодействуй мышью. Меню не требует горячих клавиш.","В квартире есть кот, корм и стационарное радио.","Вещи покупаются в ларьке или выдаются в точках сбора.","Подработки необязательны: жители живут своей жизнью.","Подробное управление записано в README_RU.md."};for(int i=0;i<6;i++)ut(42,124+i*32,l[i],.46f,white);inv_btn(648,397,110,"Закрыть",1,112);}
 }
@@ -170,6 +231,7 @@ if(uiBuiltScreen!=screen||uiBuiltHelp!=help)return;if(screen==0&&!help&&mouseLoo
  if(uiWheel&&screen==10){dialogScroll=(int)clamp(dialogScroll+uiWheel*3,0,380);}else if(uiWheel&&screen==11)g.mapZoom=clamp(g.mapZoom+uiWheel*.2f,1,3);else if(uiWheel&&screen==6){change_option(uiWheel>0?1:-1);}
  if(pressed[2]&&(screen==4||screen==5)){for(int n=0;n<uiCount;n++){UIButton*b=&uiButtons[n];if(b->action==20&&uiMouseX>=b->x&&uiMouseX<b->x+b->w&&uiMouseY>=b->y&&uiMouseY<b->y+b->h){invSelected=b->param;invDrag=-1;invDropConfirm=0;uiConsumed=1;return;}}}
  if(!pressed[1])return;
+ if(uiSoundOn)audio(5);
  for(int n=uiCount-1;n>=0;n--){UIButton*b=&uiButtons[n];if(uiMouseX<b->x||uiMouseX>b->x+b->w||uiMouseY<b->y||uiMouseY>b->y+b->h)continue;uiConsumed=1;switch(b->action){case 61:net_host();break;case 62:net_join();break;case 63:net_disconnect();break;case 60:navService=b->param;navOffice=b->param==0;navHouse=-1;mapGoal=-99;say("Маршрут выбран. Esc — вернуться в игру.");break;case 47:navOffice=1;navService=0;navHouse=-1;mapGoal=-99;screen=0;break;case 45:inv_use(g.quick[b->param]);screen=0;break;case 46:invFullInfo=!invFullInfo;break;case 40:biz_upgrade(b->param);break;
  case 41:if(!biz_invest(b->param))say("Нужны свободные 500 рублей.");break;
  case 42:if(!biz_collect())say("Пока нет денег к получению.");break;
@@ -193,7 +255,7 @@ if(uiBuiltScreen!=screen||uiBuiltHelp!=help)return;if(screen==0&&!help&&mouseLoo
  case 25:shopbuy(b->param);break;
  case 26:inv_use(g.quick[b->param]);break;
  case 27:navService=0;navHouse=dialogNPC<NN?PERSON(dialogNPC).home:NH+g.locals190[dialogNPC-NN].home;navOffice=0;mapGoal=-99;say("Дом отмечен на схеме.");break;
- case 1:pressed[b->param]=1;uiInjected=b->param;break;case 2:screen=b->param;break;case 3:optionsRow=b->param/2;change_option(b->param%2?1:-1);break;case 4:optionsTab=b->param;optionsRow=0;break;case 6:g.mapZoom=clamp(g.mapZoom+b->param*.25f,1,3);break;case 10:optionsRow=b->param;break;case 11:dialog_choose(b->param);break;case 12:mapCX=b->param==0?g.x:b->param==1?OX:shopX;mapCZ=b->param==0?g.z:b->param==1?OZ:shopZ;break;}return;}
+ case 70:qol_set_volume(b->param,(int)clamp((uiMouseX-volTrackX[b->param])*100.f/volTrackW[b->param],0,100));break;case 71:qol_toggle_fullscreen();break;case 1:pressed[b->param]=1;uiInjected=b->param;break;case 2:screen=b->param;break;case 3:optionsRow=b->param/2;change_option(b->param%2?1:-1);break;case 4:optionsTab=b->param;optionsRow=0;break;case 6:g.mapZoom=clamp(g.mapZoom+b->param*.25f,1,3);break;case 10:optionsRow=b->param;if(optionsTab==2){int bx=34+(b->param/6)*370+150;int v=(int)clamp((uiMouseX-bx)*100.f/104.f,0,100);if(b->param==4)qol_set_volume(1,v);else if(b->param<3)qol_set_volume(b->param,v);}break;case 11:dialog_choose(b->param);break;case 12:mapCX=b->param==0?g.x:b->param==1?OX:shopX;mapCZ=b->param==0?g.z:b->param==1?OZ:shopZ;break;}return;}
  if(screen==11&&uiMouseX>=150&&uiMouseX<=650&&uiMouseY>=112&&uiMouseY<=388){float x=mapCX+(uiMouseX-400)*384/(500*g.mapZoom),z=mapCZ+(uiMouseY-250)*288/(276*g.mapZoom),best=1e20f;for(int h=0;h<NH;h++){float d=dst(x,z,hx[h],hz[h]);if(d<best){best=d;navHouse=h;}}for(int p=0;p<PANEL_COUNT;p++){float d=dst(x,z,panel_origin_x(p),panel_origin_z(p));if(d<best){best=d;navHouse=NH+p;}}navService=0;navOffice=0;mapGoal=-99;uiConsumed=1;}
 }
 static void ui_mouse_end(void){if(uiInjected>=0)pressed[uiInjected]=0;uiWheel=0;}

@@ -1,7 +1,13 @@
 /* Original modular concrete reference block; not an imported art asset. */
 static void panel_slab(float x,float y,float z,float w,float d){floor203(x,y,z,w,d);}
 static void panel_door(float x,float y,float z,float open,int side){surfaceTex=0;float angle=open*1.45f;V3 a=vp(x,y,z-.9f),b=vp(x+side*(float)sin(angle)*1.8f,y,z-.9f+(float)cos(angle)*1.8f),c=vp(b.x,y+2.3f,b.z),d=vp(a.x,y+2.3f,a.z);quadstrip(a,b,c,d,0x756b5a);beam(a,d,.045f,.045f,0x404b48);beam(b,c,.045f,.045f,0x404b48);V3 h=blend3(b,c,.5f);box(h.x-side*.07f,h.y,h.z-.08f,.10f,.07f,.10f,0xd1c6a8);box(x,y+2.4f,z,.22f,.16f,2.05f,0x737e6e);}
-static void panel_window_draw(int w,int f,int k){float x=panel_cx(w)+(k<2?-1:1)*(k%2?6:4),y=f*3+1.02f,z=PANEL_Z+7.97f;int id=w*PANEL_FLOORS*4+f*4+k;float a=panelWindowAngle[panelIndex][id];V3 p=vp(x-.825f,y,z),q=vp(p.x+1.65f*(float)cos(a),y,z-1.65f*(float)sin(a)),rr=vp(q.x,y+1.6f,q.z),ss=vp(p.x,y+1.6f,p.z);surfaceTex=0;glass150(p,q,rr,ss,NH+panelIndex,f,w*8+k);beam(p,q,.035f,.035f,0xbac3bf);beam(q,rr,.04f,.04f,0xbac3bf);beam(rr,ss,.035f,.035f,0xbac3bf);beam(ss,p,.04f,.04f,0xbac3bf);V3 h=blend3(q,rr,.48f);box(h.x-.06f,h.y,h.z-.06f,.1f,.16f,.05f,0xe1ddd0);}
+static void panel_window_draw(int w,int f,int k){float x=panel_cx(w)+(k<2?-1:1)*(k%2?6:4),y=f*3+1.02f,z=PANEL_Z+7.97f;int id=w*PANEL_FLOORS*4+f*4+k;float a=panelWindowAngle[panelIndex][id];
+ /* Наружные створки всегда в плоскости фасада: открытая створка
+    торчала из стены чёрным клином и ломала вид дома. */
+ (void)a;a=0;
+ V3 p=vp(x-.86f,y,z),q=vp(p.x+1.72f*(float)cos(a),y,z-1.72f*(float)sin(a)),rr=vp(q.x,y+1.6f,q.z),ss=vp(p.x,y+1.6f,p.z);surfaceTex=0;glass150(p,q,rr,ss,NH+panelIndex,f,w*8+k);beam(p,q,.035f,.035f,0xbac3bf);beam(q,rr,.04f,.04f,0xbac3bf);beam(rr,ss,.035f,.035f,0xbac3bf);beam(ss,p,.04f,.04f,0xbac3bf);
+ box(x,y+1.66f,z-.09f,1.72f,.09f,.05f,0x9a9c92);box(x,y-.04f,z-.09f,1.72f,.09f,.05f,0x9a9c92);
+ box(x-.88f,y+.8f,z-.09f,.08f,1.66f,.05f,0x9a9c92);box(x+.88f,y+.8f,z-.09f,.08f,1.66f,.05f,0x9a9c92);V3 h=blend3(q,rr,.48f);box(h.x-.06f,h.y,h.z-.06f,.1f,.16f,.05f,0xe1ddd0);}
 
 static void panel_one_draw(void){if(dst(camx,camz,PANEL_X,PANEL_Z)>viewdist+25||!building_visible203(PANEL_X,PANEL_Z,28.4f,15.1f,19.5f))return;
  for(int w=0;w<2;w++){float x=panel_cx(w),z=PANEL_Z;U32 facade151=(U32[]){0xb4b8ac,0x969e97,0x9e9a88,0x87928f}[hash32(g.worldSeed+panelIndex*23+w)%4];
