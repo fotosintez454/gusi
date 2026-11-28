@@ -18,10 +18,10 @@ static int room_solid150(float x,float z){int f=(int)clamp((float)floor((g.playe
  }return 0;}
 /* One source of truth: object positions feed drawing, hit targets and collision. */
 static int object150(int h,int f,int s,int type,float*x,float*y,float*z,float*rx,float*rz){
- static const float ax[]={1.55f,.80f,.42f,3.05f,4.35f,BED_A,3.8f,.65f,.65f,2.8f,3.85f,2.4f,2.4f,3.85f,4.1f,4.67f,3.25f,ROOM_DOOR_A,4.15f,1.25f,3.95f,DRESSER_A};
+ static const float ax[]={1.38f,.80f,.42f,3.05f,4.35f,BED_A,3.8f,.65f,.65f,2.8f,3.85f,2.4f,2.4f,3.85f,4.1f,4.67f,3.25f,ROOM_DOOR_A,4.15f,1.25f,3.95f,DRESSER_A};
  static const float bz[]={-1.42f,-1.30f,1.65f,-1.76f,1.62f,BED_B,DESK_CHAIR_B,-.65f,.27f,4.35f,3.6f,-1.94f,-1.94f,3.6f,.12f,-.28f,-.7f,ROOM_WALL_B,-1.35f,4.02f,3.55f,DRESSER_B};
  static const float yy[]={1.05f,1.18f,1.0f,1.4f,1.25f,.65f,.48f,.62f,.7f,1.5f,.88f,1.1f,1.4f,.80f,.5f,1.55f,1.1f,1.1f,1.4f,.5f,.96f,.45f};
- static const float xx[]={.40f,.25f,.28f,.10f,.24f,.53f,.26f,.40f,.30f,.7f,.15f,.6f,.25f,.55f,.25f,.02f,.03f,.70f,.48f,.6f,.15f,.28f};
+ static const float xx[]={.30f,.25f,.28f,.10f,.24f,.53f,.26f,.40f,.30f,.7f,.15f,.6f,.25f,.55f,.25f,.02f,.03f,.70f,.48f,.6f,.15f,.28f};
  static const float zz[]={.38f,.26f,.45f,.03f,.40f,.88f,.26f,.38f,.22f,.03f,.1f,.04f,.02f,.38f,.37f,.45f,.55f,.03f,.40f,.10f,.15f,.35f};
  if(type<0||type>=22)return 0;*x=hx[h]+(s?1:-1)*(type==19?4.12f:ax[type]);*z=hz[h]+bz[type];*y=f*3+yy[type];*rx=xx[type];*rz=zz[type];return 1;
 }
@@ -68,7 +68,7 @@ static int use150(int perform){
  else if(t==6){seated=1000+id;g.x=x;g.z=z;g.rot=yaw=0;g.look=pitch=0;say("Сидишь за столом. E или движение — встать.");}
  else if(t==10)say("На полях: «В среду отключат горячую воду. Не забыть оплатить свет». ");
  else if(t==12){char a[180];SN(a,sizeof(a),"Лесная, %d / подъезд 1 / этаж %d / квартира %d",h+1,f+1,f*2+s+1);say(a);}
- else if(t==13)say("На столе кружка, хлеб и старая квитанция за отопление.");
+ else if(t==13){if(!(g.things150[id]&(1u<<22))){g.things150[id]|=1u<<22;g.thirst=mn(100,g.thirst+10);audio(2);say("Стол. Беру кружку и допиваю холодный чай. Рядом хлеб и квитанция за отопление.");}else say("На столе кружка, хлеб и старая квитанция за отопление.");}
  else if(t==14){g.bladder=mx(0,g.bladder-50);g.bowel=mx(0,g.bowel-50);audio(2);say("Вода набирается в бачок.");}
  else if(t==16||t==17){if(t==16&&ab(g.x-x)<.5f&&ab(g.z-z)<.85f||t==17&&ab(g.z-z)<.5f&&ab(g.x-x)<1.0f){say("Отойди от дверного проёма.");return 1;}g.things150[id]^=1u<<t;audio(12);nav_refresh(x,z);}
  else if(t==18){g.things150[id]^=1u<<18;audio(2);say(g.things150[id]&(1u<<18)?"Зашумел душ. Вода медленно становится тёплой.":"Душ выключен.");}

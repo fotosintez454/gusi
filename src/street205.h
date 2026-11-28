@@ -411,8 +411,9 @@ static void s205_wire_row(float z,int dir){
  }
 }
 static const float s205_cars[][2]={{-30,-5.3f},{14,5.4f},{-80,5.3f},{78,-5.3f},{105,4.9f},{-108,-5.0f},{116,-36},{66,-36},{-72,-36}};
-static const float s205_trash[][2]={{56,-33.5f},{40,-34},{30,-39},{20,-9.5f},{-30,-9.4f},{-44,-9.6f},{10,-33},{-14,-9.6f},{62,-9.4f},{-58,-36},{-24,-36},{108,-9.5f},{-106,9.5f},{90,9.4f},{-96,-36.5f},{48,9.6f},
- {72,-34.5f},{34,-9.3f},{-66,-9.5f},{6,-9.4f},{-84,-36.2f},{100,-36.4f},{54,9.5f},{-50,9.4f},{16,-36.3f},{-18,-34.8f}};
+/* Мусор только у гаражной линии и у торцов домов, не посреди двора и не у подъездов. */
+static const float s205_trash[][2]={{30,-38.6f},{-58,-38.8f},{64,-38.4f},{-96,-36.5f},{100,-36.4f},
+ {-84,-36.2f},{-18,-34.8f},{72,-38.9f},{16,-38.7f},{54,-38.2f},{-24,-38.5f},{108,-38.6f}};
 #define S205_TRASH_N ((int)(sizeof(s205_trash)/sizeof(s205_trash[0])))
 static void s205_shed(float x,float z,int seed){
  float u=world_value(9600+seed);
@@ -453,8 +454,10 @@ static void s205_ambient(void){
    box(x,.42f,z,.62f,1.15f,.6f,0xb8b3a4);box(x,.42f,z+.31f,.58f,.06f,.02f,0x8d8474);
    box(x,.42f,z-.31f,.58f,.06f,.02f,0x8d8474);soft_mesh(x-.2f,.7f,z+.32f,.25f,.3f,.02f,0,0x7a5a3c);}
   else if(v==5){ /* покрышки штабелем */
-   for(int k=0;k<3;k++){soft_mesh(x+(k%2)*.08f,.09f+k*.15f,z,.44f,.15f,.44f,0,0x2c2c2a);
-    soft_mesh(x+(k%2)*.08f,.09f+k*.15f,z,.24f,.16f,.24f,0,0x1d1d1b);}}
+   for(int k=0;k<3;k++){float ty=.17f+k*.34f;
+    soft_mesh(x+(k%2)*.07f,ty,z,.40f,.16f,.40f,0,0x2e2e2b);
+    soft_mesh(x+(k%2)*.07f,ty,z,.26f,.17f,.26f,0,0x1a1a18);
+    soft_mesh(x+(k%2)*.07f,ty+.09f,z,.30f,.03f,.30f,0,0x3d3d38);}}
   else if(v==6){ /* паллета с картоном */
    for(int k=0;k<3;k++)box(x,.04f+k*.03f,z,1.1f,.04f,.8f,0x7c6242);
    box(x,.12f,z,.9f,.1f,.7f,0x7c6242);
@@ -491,6 +494,19 @@ static void s205_ambient(void){
  (void)day;
 }
 
+/* Падающий снег вокруг камеры: зимний двор как на референсах. */
+static void snow_fall205(void){
+ if(!winterEnabled)return;
+ float t=st205.clock;
+ for(int n=0;n<150;n++){
+  float a=world_value(12000+n)*6.2831f+(float)sin(t*.13f+n)*.35f;
+  float rad=5.f+fmod(world_value(12100+n)*22.f,14.f);
+  float y=10.5f-fmod(world_value(12200+n)*11.f+t*(.9f+world_value(12300+n)*.8f),11.f);
+  if(y<.15f)continue;
+  float s=.012f+world_value(12400+n)*.014f;
+  box(camx+(float)cos(a)*rad,y,camz+(float)sin(a)*rad,s,s,s,0xe8eff2);
+ }
+}
 static void street_draw205(void){
  float day=s205_day();
  s205_ambient();

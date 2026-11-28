@@ -39,6 +39,14 @@ static int (*QueryPerformanceCounter)(long long*),(*QueryPerformanceFrequency)(l
 static int (*SetStretchBltMode)(HANDLE,int);
 static int (*StretchDIBits)(HANDLE,int,int,int,int,int,int,int,int,const void*,const BMI*,UINT,DWORD);
 static int (*PlaySoundA)(const char*,HANDLE,DWORD);
+typedef struct{int x,y;} MPT;
+typedef struct{DWORD size,flags;RECT monitor,work;} MONITORINFO;
+static long long (*GetWindowLongPtrA)(HANDLE,int);
+static long long (*SetWindowLongPtrA)(HANDLE,int,long long);
+static int (*SetWindowPos)(HANDLE,HANDLE,int,int,int,int,UINT);
+static int (*GetWindowRect)(HANDLE,RECT*);
+static HANDLE (*MonitorFromWindow)(HANDLE,DWORD);
+static int (*GetMonitorInfoA)(HANDLE,MONITORINFO*);
 static HANDLE window,dc;
 #define LOAD(lib,n) *(void**)(&n)=imp_GetProcAddress(lib,#n)
 static void platform_init(void){
@@ -47,6 +55,6 @@ static void platform_init(void){
  LOAD(c,sin);LOAD(c,cos);LOAD(c,sqrt);LOAD(c,tan);LOAD(c,atan2);LOAD(c,floor);LOAD(c,fmod);LOAD(c,malloc);LOAD(c,free);LOAD(c,fopen);LOAD(c,fread);LOAD(c,fwrite);LOAD(c,fclose);LOAD(c,getenv);*(void**)(&SN)=imp_GetProcAddress(c,"_snprintf");
  LOAD(k,MoveFileExA);LOAD(k,GetModuleHandleA);LOAD(k,Sleep);LOAD(k,ExitProcess);LOAD(k,QueryPerformanceCounter);LOAD(k,QueryPerformanceFrequency);
  LOAD(u,DestroyWindow);LOAD(u,ClipCursor);LOAD(u,RegisterRawInputDevices);LOAD(u,GetRawInputData);LOAD(u,SetProcessDPIAware);
- LOAD(u,LoadCursorA);LOAD(u,RegisterClassExA);LOAD(u,CreateWindowExA);LOAD(u,GetDC);LOAD(u,DefWindowProcA);LOAD(u,PeekMessageA);LOAD(u,TranslateMessage);LOAD(u,DispatchMessageA);LOAD(u,ShowWindow);LOAD(u,GetClientRect);LOAD(u,GetCursorPos);LOAD(u,SetCursorPos);LOAD(u,ClientToScreen);LOAD(u,ScreenToClient);LOAD(u,ShowCursor);LOAD(u,GetAsyncKeyState);LOAD(u,PostQuitMessage);LOAD(u,GetForegroundWindow);LOAD(u,SetWindowTextA);LOAD(g,StretchDIBits);LOAD(g,SetStretchBltMode);
+ LOAD(u,LoadCursorA);LOAD(u,RegisterClassExA);LOAD(u,CreateWindowExA);LOAD(u,GetDC);LOAD(u,DefWindowProcA);LOAD(u,PeekMessageA);LOAD(u,TranslateMessage);LOAD(u,DispatchMessageA);LOAD(u,ShowWindow);LOAD(u,GetClientRect);LOAD(u,GetCursorPos);LOAD(u,SetCursorPos);LOAD(u,ClientToScreen);LOAD(u,ScreenToClient);LOAD(u,ShowCursor);LOAD(u,GetAsyncKeyState);LOAD(u,PostQuitMessage);LOAD(u,GetForegroundWindow);LOAD(u,SetWindowTextA);LOAD(u,GetWindowLongPtrA);LOAD(u,SetWindowLongPtrA);LOAD(u,SetWindowPos);LOAD(u,GetWindowRect);LOAD(u,MonitorFromWindow);LOAD(u,GetMonitorInfoA);LOAD(g,StretchDIBits);LOAD(g,SetStretchBltMode);
 }
 #endif

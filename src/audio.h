@@ -1,5 +1,5 @@
 /* Procedural audio. Four queued WinMM buffers, independent event voices. */
-static int soundEnabled=1,masterVolume=75,ambientVolume=24,effectsVolume=75;
+static int soundEnabled=1,masterVolume=75,musicVolume=70,ambientVolume=24,effectsVolume=75;
 static float samplewaves[20][7000],sinewave[1024],audioPhase=0,audioBird=0,audioLow=0;
 static unsigned int audioSeed=1234567;
 typedef struct{int sound,pos;float gain,cursor,rate;} Voice;

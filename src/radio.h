@@ -28,7 +28,7 @@ static void radio_world_tick(void){
  if(g.radioOn&&!radioPlaying&&realTime-radioRetry>2){radioRetry=realTime;radioIndex=(int)clamp(g.radioTrack,0,mx(0,radioCount-1));radio_play();}
  if(!g.radioOn&&radioPlaying)radio_stop();
  float d=dst(g.x,g.z,HOME_RADIO_X,HOME_RADIO_Z);float walls=home_annex(g.x,g.z)?1.f:insideHouse==0?.35f:.12f;
- radioGain=radioPlaying&&soundEnabled&&screen==0?(int)(1000*clamp(1-d/18,0,1)*walls*masterVolume*.01f):0;
+ radioGain=radioPlaying&&soundEnabled&&screen==0?(int)(1000*clamp(1-d/18,0,1)*walls*masterVolume*.01f*musicVolume*.01f):0;
 #ifndef HEADLESS
  if(radioGain!=radioLastGain){char cmd[100];SN(cmd,sizeof(cmd),"setaudio oknoradio volume to %d",radioGain);mci_ascii(cmd);radioLastGain=radioGain;}
 #endif

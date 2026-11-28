@@ -1,5 +1,6 @@
 #include "flat_layout.h"
 #include "engine.h"
+#include "qol206.h"
 static int rail_hit203(float a,float b,float y,float x,float z0,float z1,float y0,float y1){if(ab(a-x)>.055f||b<z0||b>z1)return 0;float base=lerp(y0,y1,(b-z0)/(z1-z0));return y>base-.8f&&y<base+.90f;}
 #define NH 24
 #define NW 72
@@ -438,12 +439,13 @@ static void opening_tick(float dt){
  }else{openProgress+=dt*.205f*work_efficiency();if((openHits==0&&openProgress>=.24f)||(openHits==1&&openProgress>=.62f))begin_check();else if(openProgress>=1&&openHits>=2)finish_window(opening);}
  if(opening>=0){float a=clamp((openProgress-.26f)/.74f,0,1);a=a*a*(3-2*a);WIN(opening).angle=practiceMode?a*1.48f:a*.24f;}
 }
-static int option_count(void){return optionsTab==0?8:optionsTab==1?12:optionsTab==2?4:9;}
+static int option_count(void){return optionsTab==0?9:optionsTab==1?12:optionsTab==2?5:9;}
 static void change_option(int dir){
- if(optionsTab==0)switch(optionsRow){case 0:set_resolution((quality+dir+5)%5);break;case 1:if(dir>0){set_resolution(2);viewdist=80;detail=1;antialias=1;}else{set_resolution(1);viewdist=65;detail=0;antialias=0;}break;case 2:antialias=!antialias;break;case 3:viewdist=clamp(viewdist+dir*10,55,125);break;case 4:detail=(detail+dir+3)%3;break;case 5:field=clamp(field+dir*5,55,90);break;case 6:hudScale=clamp(hudScale+dir*.05f,.75f,1.15f);break;case 7:frameLimit=(int)clamp(frameLimit+dir*30,30,120);break;}
+ if(optionsTab==0)switch(optionsRow){case 0:set_resolution((quality+dir+5)%5);break;case 1:if(dir>0){set_resolution(2);viewdist=80;detail=1;antialias=1;}else{set_resolution(1);viewdist=65;detail=0;antialias=0;}break;case 2:antialias=!antialias;break;case 3:viewdist=clamp(viewdist+dir*10,55,125);break;case 4:detail=(detail+dir+3)%3;break;case 5:field=clamp(field+dir*5,55,90);break;case 6:hudScale=clamp(hudScale+dir*.05f,.75f,1.15f);break;case 7:frameLimit=(int)clamp(frameLimit+dir*30,30,120);break;case 8:qol_toggle_fullscreen();break;}
  else if(optionsTab==1)switch(optionsRow){case 0:easy=!easy;break;case 1:sensitivity=clamp(sensitivity+dir*.0003f,.001f,.006f);break;case 2:headbob=!headbob;break;case 3:invertY=!invertY;break;case 4:skillAssist=!skillAssist;break;case 5:autoChecks=!autoChecks;break;case 6:showHints=!showHints;break;case 7:hudMode=(hudMode+dir+3)%3;break;case 8:showRadar=0;showGoalMarker=!showGoalMarker;break;case 9:aimMultiplier=clamp(aimMultiplier+dir*.05f,.2f,1);break;case 10:bobAmplitude=clamp(bobAmplitude+dir*.005f,0,.07f);break;case 11:npcDebugEnabled=!npcDebugEnabled;break;}
  else if(optionsTab==3){switch(optionsRow){case 0:focus_profile(!g.focusMode);break;case 1:g.hudOpacity=clamp(g.hudOpacity+dir*.1f,0,1);break;case 2:g.uiMotion=(g.uiMotion+dir+3)%3;break;case 3:g.popupMode=!g.popupMode;break;case 4:g.highContrast=!g.highContrast;break;case 5:g.fastMode=!g.fastMode;break;case 6:g.mapSize=clamp(g.mapSize+dir*.05f,.75f,1.2f);break;case 7:g.mapOpacity=clamp(g.mapOpacity+dir*.1f,.1f,1);break;case 8:g.season=(g.season+dir+4)%4;g.seasonDay=g.day;g.winter=g.season==0;if(!g.winter)g.trackHead190=0;winterEnabled=g.winter;navReady=0;season_prepare();break;}}
- else switch(optionsRow){case 0:masterVolume=(int)clamp(masterVolume+dir*10,0,100);break;case 1:ambientVolume=(int)clamp(ambientVolume+dir*10,0,100);break;case 2:effectsVolume=(int)clamp(effectsVolume+dir*10,0,100);audio(5);break;case 3:soundEnabled=!soundEnabled;break;}
+ else switch(optionsRow){case 0:masterVolume=(int)clamp(masterVolume+dir*10,0,100);break;case 1:ambientVolume=(int)clamp(ambientVolume+dir*10,0,100);break;case 2:effectsVolume=(int)clamp(effectsVolume+dir*10,0,100);audio(5);break;case 3:soundEnabled=!soundEnabled;break;case 4:musicVolume=(int)clamp(musicVolume+dir*10,0,100);audio(5);break;}
+ qol_settings_save();
 }
 static void actor_tick180(float dt){
  float want=keys[17]?1:0;crouch180+=clamp(want-crouch180,-dt*7,dt*7);

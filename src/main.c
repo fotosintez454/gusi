@@ -34,7 +34,25 @@ static void tick(float dt){
 #else
 static int creatingWindow=1;
 static int mouseCaptured=0,rawMouse=0,rawSkip=0;static long long rawDX=0,rawDY=0;
-static void release_mouse(void){if(ClipCursor)ClipCursor(0);rawDX=rawDY=0;if(mouseCaptured){while(ShowCursor(1)<0){}mouseCaptured=0;}}
+static int cursorHiddenByMenu=0,windowRectSaved=0,lastFadeScreen206=-99;static RECT windowRect;
+/* v0.20.6: borderless fullscreen on the current monitor, restored to the old window rectangle. */
+static void window_apply_mode(int on){
+ if(!window||!SetWindowPos)return;
+ long long style=GetWindowLongPtrA?GetWindowLongPtrA(window,-16):0;
+ if(on){
+  if(!windowRectSaved&&GetWindowRect){GetWindowRect(window,&windowRect);windowRectSaved=1;}
+  MONITORINFO mi;memset(&mi,0,sizeof(mi));mi.size=sizeof(mi);
+  RECT area={0,0,1280,720};
+  if(MonitorFromWindow&&GetMonitorInfoA){HANDLE mon=MonitorFromWindow(window,2);if(mon&&GetMonitorInfoA(mon,&mi))area=mi.monitor;}
+  if(SetWindowLongPtrA)SetWindowLongPtrA(window,-16,(style&~0x00C00000LL&~0x00040000LL&~0x00080000LL&~0x00020000LL)|0x80000000LL);
+  SetWindowPos(window,0,area.l,area.t,area.r-area.l,area.b-area.t,0x0040|0x0020);
+ }else{
+  if(SetWindowLongPtrA)SetWindowLongPtrA(window,-16,(style&~0x80000000LL)|0x00C00000LL|0x00040000LL|0x00080000LL);
+  RECT r=windowRect;if(!windowRectSaved){r.l=100;r.t=80;r.r=1380;r.b=840;}
+  SetWindowPos(window,0,r.l,r.t,r.r-r.l,r.b-r.t,0x0040|0x0020);
+ }
+}
+static void release_mouse(void){if(ClipCursor)ClipCursor(0);rawDX=rawDY=0;if(mouseCaptured){while(ShowCursor(1)<0){}mouseCaptured=0;}if(cursorHiddenByMenu){while(ShowCursor(1)<0){}cursorHiddenByMenu=0;}}
 static LRESULT wndproc(HANDLE h,UINT msg,WPARAM wp,LPARAM lp){
  if(msg==0x20a){uiWheel+=(short)((wp>>16)&65535)/120;return 0;}
  if(msg==0xff&&GetRawInputData){unsigned long long data[32];UINT bytes=sizeof(data);UINT got=GetRawInputData((HANDLE)lp,0x10000003,data,&bytes,24);
@@ -43,18 +61,19 @@ static LRESULT wndproc(HANDLE h,UINT msg,WPARAM wp,LPARAM lp){
   return DefWindowProcA(h,msg,wp,lp);
  }
  if(msg==2){release_mouse();if(!creatingWindow)PostQuitMessage(0);return 0;}
- if(msg==16){release_mouse();save_game();running=0;PostQuitMessage(0);return 0;}
+ if(msg==16){release_mouse();save_game();qol_settings_save();running=0;PostQuitMessage(0);return 0;}
  if(msg==8||(msg==0x1c&&!wp)){release_mouse();if(screen==0)screen=2;memset(keys,0,sizeof(keys));memset(oldkeys,0,sizeof(oldkeys));return DefWindowProcA(h,msg,wp,lp);}
  return DefWindowProcA(h,msg,wp,lp);
 }
 void start(void){
  platform_init();net_load();radio_scan();if(SetProcessDPIAware)SetProcessDPIAware();audio_init();
- char storage[1024],eventStorage[1100],npcStorage[1100];char*app=getenv("LOCALAPPDATA");if(app){SN(storage,sizeof(storage),"%s\\OKNO_020.save",app);savepath=storage;SN(eventStorage,sizeof(eventStorage),"%s\\OKNO_events.csv",app);eventpath=eventStorage;SN(npcStorage,sizeof(npcStorage),"%s\\OKNO_npc_debug.csv",app);npcLogPath=npcStorage;}
+ char storage[1024],eventStorage[1100],npcStorage[1100];char*app=getenv("LOCALAPPDATA");if(app){SN(storage,sizeof(storage),"%s\\OKNO_020.save",app);savepath=storage;SN(settingsPath,sizeof(settingsPath),"%s\\OKNO_020.cfg",app);SN(eventStorage,sizeof(eventStorage),"%s\\OKNO_events.csv",app);eventpath=eventStorage;SN(npcStorage,sizeof(npcStorage),"%s\\OKNO_npc_debug.csv",app);npcLogPath=npcStorage;}
  HANDLE inst=GetModuleHandleA(0);WC wc;memset(&wc,0,sizeof(wc));wc.size=sizeof(wc);wc.style=3|0x20;wc.proc=wndproc;wc.instance=inst;wc.cursor=LoadCursorA(0,(const char*)32512);wc.name="OknoNative3D";RegisterClassExA(&wc);
  window=CreateWindowExA(0,wc.name,"OKNO | Professional Window Opener | Update 0.20.4",0x10cf0000,100,80,1280,760,0,0,inst,0);if(!window)ExitProcess(1);dc=GetDC(window);if(SetStretchBltMode)SetStretchBltMode(dc,4);ShowWindow(window,5);
 #ifndef FORCE_SOFTWARE
  if(!gpu_init()){gpu_shutdown();if(DestroyWindow){DestroyWindow(window);window=CreateWindowExA(0,wc.name,"OKNO 0.20.4 | CPU fallback",0x10cf0000,100,80,1280,760,0,0,inst,0);if(!window)ExitProcess(2);dc=GetDC(window);ShowWindow(window,5);}}
 
+ qol_settings_load();if(fullscreenOn)window_apply_mode(1);
  district_material_prepare();season_prepare();
  if(gpuActive){const Texture*warm[]={&mat_brick,&mat_redbrick,&mat_plaster,&mat_paint,&mat_roof,&mat_wood,&mat_floor,&mat_asphalt,&mat_grass,&mat_pavement,&mat_concrete,&mat_metal};for(int n=0;n<12;n++)gpu_texture_index(warm[n]);}
 #endif
@@ -69,12 +88,15 @@ void start(void){
   QueryPerformanceCounter(&now);double frameMilliseconds=(double)(now-last)*1000/frequency;float dt=clamp((float)(frameMilliseconds*.001),.001f,.08f);last=now;fps=lerp(fps,1000.f/(float)mx(.1f,(float)frameMilliseconds),.06f);
   int focus=GetForegroundWindow()==window;
   for(int k=0;k<256;k++){keys[k]=focus&&((GetAsyncKeyState(k)&0x8000)!=0);pressed[k]=keys[k]&&!oldkeys[k];oldkeys[k]=keys[k];}
+  if(focus&&(pressed[122]||(keys[18]&&pressed[13])))qol_toggle_fullscreen();
+  if(screen!=lastFadeScreen206){lastFadeScreen206=screen;uiFadeStart=realTime;}
   RECT client;GetClientRect(window,&client);int cw=client.r-client.l,ch=client.b-client.t;
   POINT cursor;GetCursorPos(&cursor);ScreenToClient(window,&cursor);uiMouseX=cw>0?cursor.x*800.f/cw:-1000;uiMouseY=ch>0?cursor.y*450.f/ch:-1000;
   static POINT oldCursor={0,0};if(screen==11&&keys[2]){mapCX=clamp(mapCX-(cursor.x-oldCursor.x)*330.f/(mn(cw,1920)*g.mapZoom),-192,192);mapCZ=clamp(mapCZ-(cursor.y-oldCursor.y)*184.f/(mn(ch,1080)*g.mapZoom),-144,144);}oldCursor=cursor;
   int capture=focus&&screen==0&&!help&&mouseLook&&!keys[18];
   POINT mid={cw/2,ch/2};ClientToScreen(window,&mid);
   if(capture&&!mouseCaptured){while(ShowCursor(0)>=0){}mouseCaptured=1;rawSkip=rawMouse?0:1;rawDX=rawDY=0;yaw=g.rot;pitch=g.look;SetCursorPos(mid.x,mid.y);}
+  if(!capture&&mouseCaptured)release_mouse();
   if(!capture&&mouseCaptured)release_mouse();
   if(capture&&cw>0&&ch>0){
    RECT clip;if(rawMouse){clip.l=mid.x;clip.t=mid.y;clip.r=mid.x+1;clip.b=mid.y+1;}else{POINT origin={0,0};ClientToScreen(window,&origin);clip.l=origin.x;clip.t=origin.y;clip.r=origin.x+cw;clip.b=origin.y+ch;}if(ClipCursor)ClipCursor(&clip);
@@ -86,6 +108,8 @@ void start(void){
   if(pressed[120]){if(perfFile){fclose(perfFile);perfFile=0;say("Профиль сохранён в LOCALAPPDATA.");}else{SN(profilePath,sizeof(profilePath),"%s\\OKNO_profile_%.0f.csv",app?app:".",(double)now);perfFile=fopen(profilePath,"w");if(perfFile)SN(notice,sizeof(notice),"F9: профилирование включено. F9 — остановить.");noticeTime=4;if(perfFile){const char*header="frame_dt_ms,world_cpu_ms,post_cpu_ms,ui_cpu_ms,render_cpu_ms,draw_batches,triangles,estimated_gl_texture_bytes,backend\n";int len=0;while(header[len])len++;fwrite(header,1,len,perfFile);}}}
   if(focus){net_key_input();tick(dt);}net_tick();
   if(mouseCaptured&&(screen!=0||help||!mouseLook))release_mouse();
+  if(focus&&screen!=0&&!cursorHiddenByMenu&&!mouseCaptured){while(ShowCursor(0)>=0){}cursorHiddenByMenu=1;}
+  if((!focus||screen==0)&&cursorHiddenByMenu&&!mouseCaptured){while(ShowCursor(1)<0){}cursorHiddenByMenu=0;}
   radio_tick();audio_pump();discord_tick203(dt);
   gpuOutputW=cw;gpuOutputH=ch;
   if(cw>0&&ch>0)render_frame();

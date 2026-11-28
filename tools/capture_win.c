@@ -15,4 +15,5 @@ int main(void){savepath="/tmp/okno_win_capture.save";eventpath="/tmp/okno_win_ca
  cap("qa/win/01_residence_side.ppm",hx[0]-13.f,hz[0]-10.f,hx[0],3.2f,hz[0]-4.48f);
  cap("qa/win/02_residence_close.ppm",hx[0]+2.f,hz[0]-9.f,hx[0]+2.f,3.0f,hz[0]-4.48f);
  cap("qa/win/03_panel_front.ppm",PANEL_X,PANEL_Z+22.f,PANEL_X,4.5f,PANEL_Z+7.97f);
+ g.hours=21;cap("qa/win/04_residence_night.ppm",hx[0]+2.f,hz[0]-9.f,hx[0]+2.f,3.0f,hz[0]-4.48f);
  return 0;}

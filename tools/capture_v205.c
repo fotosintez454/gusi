@@ -24,4 +24,9 @@ int main(void){savepath="/tmp/okno205_capture.save";eventpath="/tmp/okno205_capt
  g.hours=23;
  cap("qa/v205/13_kiosk_night.ppm",50,-42,58,1.2f,-37.6f);
  {float qx,qz;quarter_shop(s205_shop247(),&qx,&qz);cap("qa/v205/14_shop247_night.ppm",qx-2.5f,qz-6.5f,qx,1.4f,qz-1.3f);}
+ winterEnabled=1;st205.clock=12.5f;
+ cap("qa/v205/15_winter_night.ppm",-8,-3.2f,60,4,-3);
+ screen=1;shot("qa/v205/16_menu.ppm");screen=0;
+ screen=2;uiMouseX=250;uiMouseY=186;shot("qa/v205/17_pause.ppm");uiMouseX=520;uiMouseY=172;shot("qa/v205/18_pause_slider.ppm");screen=0;
+ screen=6;optionsTab=2;optionsRow=1;uiMouseX=200;uiMouseY=200;shot("qa/v205/19_options_sound.ppm");optionsTab=0;screen=0;
  return 0;}

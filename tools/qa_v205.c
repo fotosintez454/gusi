@@ -83,7 +83,8 @@ int main(void){
  T205(S205_GAR_N==6,"six garage sheds");
  for(int n=0;n<S205_GAR_N;n++)T205(solid(s205_gar[n][0],s205_gar[n][1]),"shed solid");
  T205(solid(-97.4f,-38.2f)&&solid(94.6f,-38.4f),"dumpsters solid");
- T205(S205_TRASH_N>=24,"trash scatter dense");
+ T205(S205_TRASH_N==12,"trash only along garage line");
+ for(int n=0;n<S205_TRASH_N;n++)T205(s205_trash[n][1]<-34.f,"trash off the yard paths");
  T205(!solid(s205_gar[0][0],s205_gar[0][1]+2.6f),"shed front walkable");
  /* ракушка: подсказка и осмотр */
  aim205(-100,-39.0f,-100,1.2f,-39.85f);T205(strstr(prompt,"ракуш")!=0,"shed prompt");
